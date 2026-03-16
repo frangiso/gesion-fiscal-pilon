@@ -6,7 +6,8 @@
 <title>Gestión Fiscal – Contador Franco Armand Pilon</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.8.0/Recharts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.1.16/Recharts.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
@@ -221,7 +222,7 @@ tbody tr:last-child{border-bottom:none}
 <script>
 const {useState,useMemo,useRef,useEffect,createElement:h,Fragment} = React;
 
-/* ── CATEGORÍAS 2026 ── */
+/* -- CATEGORÍAS 2026 -- */
 const CATS = {
   A:{limite:10277988,  cuota:42387},
   B:{limite:15063928,  cuota:48251},
@@ -246,8 +247,8 @@ function getProyec(monto,mes){ return mes?Math.round((monto/mes)*12):0; }
 function fmt(n){ return new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:0,maximumFractionDigits:0}).format(n); }
 function fmtFecha(iso){ if(!iso)return '—'; return iso.slice(0,10); }
 
-/* ── DATOS DEMO ── */
-const AÑO = new Date().getFullYear();
+/* -- DATOS DEMO -- */
+const ANIO = new Date().getFullYear();
 const store = {
   users:[
     {id:'admin-1',email:'franco@armandpilon.com.ar',password:'Admin2026!',role:'admin',nombre:'Franco',apellido:'Armand Pilon'},
@@ -257,74 +258,74 @@ const store = {
     {id:'c4',email:'carlos@email.com',password:'1234',role:'client',nombre:'Carlos',apellido:'Sánchez',telefono:'11-3344-7788',fiscal:{cuit:'20-22334455-6',categoria:'D',actividad:'Consultoría',inicio:'2020-05-20',domicilio:'Belgrano, CABA',iibb:true,nro_iibb:'901-778899-1'}},
   ],
   invoices:{
-    'c1':[{id:'i1',periodo:`${AÑO}-01`,monto:1450000},{id:'i2',periodo:`${AÑO}-02`,monto:1680000},{id:'i3',periodo:`${AÑO}-03`,monto:1520000}],
-    'c2':[{id:'i4',periodo:`${AÑO}-01`,monto:2900000},{id:'i5',periodo:`${AÑO}-02`,monto:3100000},{id:'i6',periodo:`${AÑO}-03`,monto:2750000}],
-    'c3':[{id:'i7',periodo:`${AÑO}-01`,monto:780000},{id:'i8',periodo:`${AÑO}-02`,monto:920000}],
-    'c4':[{id:'i9',periodo:`${AÑO}-01`,monto:1900000},{id:'i10',periodo:`${AÑO}-02`,monto:2100000},{id:'i11',periodo:`${AÑO}-03`,monto:1850000}],
+    'c1':[{id:'i1',periodo:ANIO+'-'+'01',monto:1450000},{id:'i2',periodo:ANIO+'-'+'02',monto:1680000},{id:'i3',periodo:ANIO+'-'+'03',monto:1520000}],
+    'c2':[{id:'i4',periodo:ANIO+'-'+'01',monto:2900000},{id:'i5',periodo:ANIO+'-'+'02',monto:3100000},{id:'i6',periodo:ANIO+'-'+'03',monto:2750000}],
+    'c3':[{id:'i7',periodo:ANIO+'-'+'01',monto:780000},{id:'i8',periodo:ANIO+'-'+'02',monto:920000}],
+    'c4':[{id:'i9',periodo:ANIO+'-'+'01',monto:1900000},{id:'i10',periodo:ANIO+'-'+'02',monto:2100000},{id:'i11',periodo:ANIO+'-'+'03',monto:1850000}],
   },
   payments:{
     'c1':[
-      {id:'p1',tipo:'monotributo',periodo:`${AÑO}-01`,monto:56502,estado:'pagado',fecha_venc:`${AÑO}-01-20`,fecha_pago:`${AÑO}-01-18`},
-      {id:'p2',tipo:'monotributo',periodo:`${AÑO}-02`,monto:56502,estado:'pagado',fecha_venc:`${AÑO}-02-20`,fecha_pago:`${AÑO}-02-15`},
-      {id:'p3',tipo:'monotributo',periodo:`${AÑO}-03`,monto:56502,estado:'pendiente',fecha_venc:`${AÑO}-03-20`,fecha_pago:null},
-      {id:'p4',tipo:'ingresos_brutos',periodo:`${AÑO}-01`,monto:29000,estado:'pagado',fecha_venc:`${AÑO}-01-15`,fecha_pago:`${AÑO}-01-14`},
-      {id:'p5',tipo:'ingresos_brutos',periodo:`${AÑO}-02`,monto:33600,estado:'pagado',fecha_venc:`${AÑO}-02-15`,fecha_pago:`${AÑO}-02-13`},
-      {id:'p6',tipo:'ingresos_brutos',periodo:`${AÑO}-03`,monto:30400,estado:'pendiente',fecha_venc:`${AÑO}-03-15`,fecha_pago:null},
+      {id:'p1',tipo:'monotributo',periodo:ANIO+'-'+'01',monto:56502,estado:'pagado',fecha_venc:ANIO+'-'+'01-20',fecha_pago:ANIO+'-'+'01-18'},
+      {id:'p2',tipo:'monotributo',periodo:ANIO+'-'+'02',monto:56502,estado:'pagado',fecha_venc:ANIO+'-'+'02-20',fecha_pago:ANIO+'-'+'02-15'},
+      {id:'p3',tipo:'monotributo',periodo:ANIO+'-'+'03',monto:56502,estado:'pendiente',fecha_venc:ANIO+'-'+'03-20',fecha_pago:null},
+      {id:'p4',tipo:'ingresos_brutos',periodo:ANIO+'-'+'01',monto:29000,estado:'pagado',fecha_venc:ANIO+'-'+'01-15',fecha_pago:ANIO+'-'+'01-14'},
+      {id:'p5',tipo:'ingresos_brutos',periodo:ANIO+'-'+'02',monto:33600,estado:'pagado',fecha_venc:ANIO+'-'+'02-15',fecha_pago:ANIO+'-'+'02-13'},
+      {id:'p6',tipo:'ingresos_brutos',periodo:ANIO+'-'+'03',monto:30400,estado:'pendiente',fecha_venc:ANIO+'-'+'03-15',fecha_pago:null},
     ],
     'c2':[
-      {id:'p7',tipo:'monotributo',periodo:`${AÑO}-01`,monto:89218,estado:'pagado',fecha_venc:`${AÑO}-01-20`,fecha_pago:`${AÑO}-01-17`},
-      {id:'p8',tipo:'monotributo',periodo:`${AÑO}-02`,monto:89218,estado:'pagado',fecha_venc:`${AÑO}-02-20`,fecha_pago:`${AÑO}-02-19`},
-      {id:'p9',tipo:'monotributo',periodo:`${AÑO}-03`,monto:89218,estado:'vencido',fecha_venc:`${AÑO}-03-20`,fecha_pago:null},
-      {id:'p10',tipo:'ingresos_brutos',periodo:`${AÑO}-01`,monto:58000,estado:'pagado',fecha_venc:`${AÑO}-01-15`,fecha_pago:`${AÑO}-01-13`},
-      {id:'p11',tipo:'ingresos_brutos',periodo:`${AÑO}-02`,monto:62000,estado:'vencido',fecha_venc:`${AÑO}-02-15`,fecha_pago:null},
+      {id:'p7',tipo:'monotributo',periodo:ANIO+'-'+'01',monto:89218,estado:'pagado',fecha_venc:ANIO+'-'+'01-20',fecha_pago:ANIO+'-'+'01-17'},
+      {id:'p8',tipo:'monotributo',periodo:ANIO+'-'+'02',monto:89218,estado:'pagado',fecha_venc:ANIO+'-'+'02-20',fecha_pago:ANIO+'-'+'02-19'},
+      {id:'p9',tipo:'monotributo',periodo:ANIO+'-'+'03',monto:89218,estado:'vencido',fecha_venc:ANIO+'-'+'03-20',fecha_pago:null},
+      {id:'p10',tipo:'ingresos_brutos',periodo:ANIO+'-'+'01',monto:58000,estado:'pagado',fecha_venc:ANIO+'-'+'01-15',fecha_pago:ANIO+'-'+'01-13'},
+      {id:'p11',tipo:'ingresos_brutos',periodo:ANIO+'-'+'02',monto:62000,estado:'vencido',fecha_venc:ANIO+'-'+'02-15',fecha_pago:null},
     ],
     'c3':[
-      {id:'p12',tipo:'monotributo',periodo:`${AÑO}-01`,monto:48251,estado:'pagado',fecha_venc:`${AÑO}-01-20`,fecha_pago:`${AÑO}-01-10`},
-      {id:'p13',tipo:'monotributo',periodo:`${AÑO}-02`,monto:48251,estado:'pagado',fecha_venc:`${AÑO}-02-20`,fecha_pago:`${AÑO}-02-18`},
-      {id:'p14',tipo:'monotributo',periodo:`${AÑO}-03`,monto:48251,estado:'pendiente',fecha_venc:`${AÑO}-03-20`,fecha_pago:null},
+      {id:'p12',tipo:'monotributo',periodo:ANIO+'-'+'01',monto:48251,estado:'pagado',fecha_venc:ANIO+'-'+'01-20',fecha_pago:ANIO+'-'+'01-10'},
+      {id:'p13',tipo:'monotributo',periodo:ANIO+'-'+'02',monto:48251,estado:'pagado',fecha_venc:ANIO+'-'+'02-20',fecha_pago:ANIO+'-'+'02-18'},
+      {id:'p14',tipo:'monotributo',periodo:ANIO+'-'+'03',monto:48251,estado:'pendiente',fecha_venc:ANIO+'-'+'03-20',fecha_pago:null},
     ],
     'c4':[
-      {id:'p15',tipo:'monotributo',periodo:`${AÑO}-01`,monto:69840,estado:'pagado',fecha_venc:`${AÑO}-01-20`,fecha_pago:`${AÑO}-01-20`},
-      {id:'p16',tipo:'monotributo',periodo:`${AÑO}-02`,monto:69840,estado:'pagado',fecha_venc:`${AÑO}-02-20`,fecha_pago:`${AÑO}-02-17`},
-      {id:'p17',tipo:'monotributo',periodo:`${AÑO}-03`,monto:69840,estado:'vencido',fecha_venc:`${AÑO}-03-20`,fecha_pago:null},
-      {id:'p18',tipo:'ingresos_brutos',periodo:`${AÑO}-01`,monto:38000,estado:'pagado',fecha_venc:`${AÑO}-01-15`,fecha_pago:`${AÑO}-01-12`},
-      {id:'p19',tipo:'ingresos_brutos',periodo:`${AÑO}-02`,monto:42000,estado:'vencido',fecha_venc:`${AÑO}-02-15`,fecha_pago:null},
+      {id:'p15',tipo:'monotributo',periodo:ANIO+'-'+'01',monto:69840,estado:'pagado',fecha_venc:ANIO+'-'+'01-20',fecha_pago:ANIO+'-'+'01-20'},
+      {id:'p16',tipo:'monotributo',periodo:ANIO+'-'+'02',monto:69840,estado:'pagado',fecha_venc:ANIO+'-'+'02-20',fecha_pago:ANIO+'-'+'02-17'},
+      {id:'p17',tipo:'monotributo',periodo:ANIO+'-'+'03',monto:69840,estado:'vencido',fecha_venc:ANIO+'-'+'03-20',fecha_pago:null},
+      {id:'p18',tipo:'ingresos_brutos',periodo:ANIO+'-'+'01',monto:38000,estado:'pagado',fecha_venc:ANIO+'-'+'01-15',fecha_pago:ANIO+'-'+'01-12'},
+      {id:'p19',tipo:'ingresos_brutos',periodo:ANIO+'-'+'02',monto:42000,estado:'vencido',fecha_venc:ANIO+'-'+'02-15',fecha_pago:null},
     ],
   },
   iibb:{
     'c1':[
-      {id:'dj1',periodo:`${AÑO}-01`,base:1450000,alicuota:3.5,monto:50750,estado:'presentada',fecha:`${AÑO}-01-14`},
-      {id:'dj2',periodo:`${AÑO}-02`,base:1680000,alicuota:3.5,monto:58800,estado:'presentada',fecha:`${AÑO}-02-12`},
-      {id:'dj3',periodo:`${AÑO}-03`,base:1520000,alicuota:3.5,monto:53200,estado:'pendiente',fecha:null},
+      {id:'dj1',periodo:ANIO+'-'+'01',base:1450000,alicuota:3.5,monto:50750,estado:'presentada',fecha:ANIO+'-'+'01-14'},
+      {id:'dj2',periodo:ANIO+'-'+'02',base:1680000,alicuota:3.5,monto:58800,estado:'presentada',fecha:ANIO+'-'+'02-12'},
+      {id:'dj3',periodo:ANIO+'-'+'03',base:1520000,alicuota:3.5,monto:53200,estado:'pendiente',fecha:null},
     ],
     'c2':[
-      {id:'dj4',periodo:`${AÑO}-01`,base:2900000,alicuota:3.0,monto:87000,estado:'presentada',fecha:`${AÑO}-01-13`},
-      {id:'dj5',periodo:`${AÑO}-02`,base:3100000,alicuota:3.0,monto:93000,estado:'presentada',fecha:`${AÑO}-02-11`},
-      {id:'dj6',periodo:`${AÑO}-03`,base:2750000,alicuota:3.0,monto:82500,estado:'vencida',fecha:null},
+      {id:'dj4',periodo:ANIO+'-'+'01',base:2900000,alicuota:3.0,monto:87000,estado:'presentada',fecha:ANIO+'-'+'01-13'},
+      {id:'dj5',periodo:ANIO+'-'+'02',base:3100000,alicuota:3.0,monto:93000,estado:'presentada',fecha:ANIO+'-'+'02-11'},
+      {id:'dj6',periodo:ANIO+'-'+'03',base:2750000,alicuota:3.0,monto:82500,estado:'vencida',fecha:null},
     ],
     'c4':[
-      {id:'dj7',periodo:`${AÑO}-01`,base:1900000,alicuota:3.5,monto:66500,estado:'presentada',fecha:`${AÑO}-01-12`},
-      {id:'dj8',periodo:`${AÑO}-02`,base:2100000,alicuota:3.5,monto:73500,estado:'pendiente',fecha:null},
+      {id:'dj7',periodo:ANIO+'-'+'01',base:1900000,alicuota:3.5,monto:66500,estado:'presentada',fecha:ANIO+'-'+'01-12'},
+      {id:'dj8',periodo:ANIO+'-'+'02',base:2100000,alicuota:3.5,monto:73500,estado:'pendiente',fecha:null},
     ],
   },
   messages:{
     'c1':[
-      {id:'m1',from:'admin',texto:'Hola María, recordá que el vencimiento del monotributo de marzo es el día 20. ¿Necesitás el VEP?',fecha:`${AÑO}-03-10T10:30:00`,leido:true},
-      {id:'m2',from:'client',texto:'Hola Franco! Sí por favor, mandame el VEP cuando puedas. Gracias!',fecha:`${AÑO}-03-10T11:15:00`,leido:true},
-      {id:'m3',from:'admin',texto:'Te mando el VEP ahora. También te aviso que con la facturación de este mes te acercás al límite de la Categoría C. Hablamos esta semana.',fecha:`${AÑO}-03-10T11:45:00`,leido:false},
+      {id:'m1',from:'admin',texto:'Hola María, recordá que el vencimiento del monotributo de marzo es el día 20. ¿Necesitás el VEP?',fecha:ANIO+'-'+'03-10T10:30:00',leido:true},
+      {id:'m2',from:'client',texto:'Hola Franco! Sí por favor, mandame el VEP cuando puedas. Gracias!',fecha:ANIO+'-'+'03-10T11:15:00',leido:true},
+      {id:'m3',from:'admin',texto:'Te mando el VEP ahora. También te aviso que con la facturación de este mes te acercás al límite de la Categoría C. Hablamos esta semana.',fecha:ANIO+'-'+'03-10T11:45:00',leido:false},
     ],
     'c2':[
-      {id:'m4',from:'admin',texto:'Roberto, tenés el pago de monotributo de marzo vencido. Por favor regularizá lo antes posible.',fecha:`${AÑO}-03-12T09:00:00`,leido:false},
+      {id:'m4',from:'admin',texto:'Roberto, tenés el pago de monotributo de marzo vencido. Por favor regularizá lo antes posible.',fecha:ANIO+'-'+'03-12T09:00:00',leido:false},
     ],
     'c3':[],
     'c4':[
-      {id:'m5',from:'admin',texto:'Carlos, revisé tu DJ de IIBB de febrero. Hay una diferencia en la base imponible. ¿Podemos hablar esta semana?',fecha:`${AÑO}-03-08T14:00:00`,leido:true},
-      {id:'m6',from:'client',texto:'Claro Franco, el jueves a las 10 te va bien?',fecha:`${AÑO}-03-08T14:30:00`,leido:true},
+      {id:'m5',from:'admin',texto:'Carlos, revisé tu DJ de IIBB de febrero. Hay una diferencia en la base imponible. ¿Podemos hablar esta semana?',fecha:ANIO+'-'+'03-08T14:00:00',leido:true},
+      {id:'m6',from:'client',texto:'Claro Franco, el jueves a las 10 te va bien?',fecha:ANIO+'-'+'03-08T14:30:00',leido:true},
     ],
   },
 };
 
-/* ── SVG ICONS ── */
+/* -- SVG ICONS -- */
 const Icon = ({name,size=14,color='currentColor'})=>{
   const s={width:size,height:size,display:'inline-block',verticalAlign:'middle',flexShrink:0};
   const icons={
@@ -356,14 +357,14 @@ const Icon = ({name,size=14,color='currentColor'})=>{
   return icons[name]||h('span',null,'?');
 };
 
-/* ── AI ASSISTANT ── */
+/* -- AI ASSISTANT -- */
 const AI_RESPONSES = {
-  categoria:`Las categorías del Monotributo van de la A a la K. Desde febrero 2026:\n\n• Cat. A: hasta $10.277.988/año\n• Cat. B: hasta $15.063.928/año\n• Cat. C: hasta $21.236.256/año\n• Cat. D: hasta $26.545.320/año\n• Cat. E: hasta $31.854.384/año\n• Cat. F hasta K: hasta $108.357.084/año\n\nTu contador actualiza estos valores cada semestre.`,
-  vencimiento:`El Monotributo vence el día 20 de cada mes.\nIngresos Brutos generalmente el día 15.\n\nSi el vencimiento cae en fin de semana o feriado, se corre al siguiente día hábil.`,
-  recategorizacion:`La recategorización es obligatoria dos veces al año: enero y julio, del 1 al 20.\n\nSi tu facturación superó el límite de tu categoría, debés subir. Tu contador Franco te avisará si corresponde.`,
-  pago:`Podés pagar en:\n• monotributo.arca.gob.ar\n• Generando un VEP desde la web de ARCA\n• Por homebanking o app del banco\n\nSi necesitás el VEP, pedíselo a Franco por el chat.`,
-  iibb:`Ingresos Brutos es un impuesto provincial. En CABA se gestiona en AGIP.\n\nLa alícuota varía según la actividad (generalmente entre 3% y 4.5%). Tu contador presenta las declaraciones juradas mensualmente.`,
-  default:`Soy el asistente fiscal del estudio del Contador Franco Armand Pilon. Puedo ayudarte con:\n\n• Categorías y límites de facturación 2026\n• Fechas de vencimiento\n• Proceso de recategorización\n• Ingresos Brutos\n• Pagos y VEP\n\n¿Sobre qué querés consultar?`
+  categoria:'Las categorías del Monotributo van de la A a la K. Desde febrero 2026:\n\n• Cat. A: hasta $10.277.988/año\n• Cat. B: hasta $15.063.928/año\n• Cat. C: hasta $21.236.256/año\n• Cat. D: hasta $26.545.320/año\n• Cat. E: hasta $31.854.384/año\n• Cat. F hasta K: hasta $108.357.084/año\n\nTu contador actualiza estos valores cada semestre.',
+  vencimiento:'El Monotributo vence el día 20 de cada mes.\nIngresos Brutos generalmente el día 15.\n\nSi el vencimiento cae en fin de semana o feriado, se corre al siguiente día hábil.',
+  recategorizacion:'La recategorización es obligatoria dos veces al año: enero y julio, del 1 al 20.\n\nSi tu facturación superó el límite de tu categoría, debés subir. Tu contador Franco te avisará si corresponde.',
+  pago:'Podés pagar en:\n• monotributo.arca.gob.ar\n• Generando un VEP desde la web de ARCA\n• Por homebanking o app del banco\n\nSi necesitás el VEP, pedíselo a Franco por el chat.',
+  iibb:'Ingresos Brutos es un impuesto provincial. En CABA se gestiona en AGIP.\n\nLa alícuota varía según la actividad (generalmente entre 3% y 4.5%). Tu contador presenta las declaraciones juradas mensualmente.',
+  default:'Soy el asistente fiscal del estudio del Contador Franco Armand Pilon. Puedo ayudarte con:\n\n• Categorías y límites de facturación 2026\n• Fechas de vencimiento\n• Proceso de recategorización\n• Ingresos Brutos\n• Pagos y VEP\n\n¿Sobre qué querés consultar?'
 };
 function getAIResp(msg){
   const m=msg.toLowerCase();
@@ -397,9 +398,9 @@ function AIAssistant(){
     ),
     h('div',{style:{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}},
       h('div',{className:'ai-msgs',ref:endRef},
-        msgs.map((m,i)=>h('div',{key:i,className:`ai-msg ${m.role}`},
-          h('div',{className:`ai-av ${m.role}`},m.role==='bot'?h(Icon,{name:'bot',size:13}):h('span',null,'Vos')),
-          h('div',{className:`ai-bub ${m.role}`},m.text)
+        msgs.map((m,i)=>h('div',{key:i,className:'ai-msg '+m.role},
+          h('div',{className:'ai-av '+m.role},m.role==='bot'?h(Icon,{name:'bot',size:13}):h('span',null,'Vos')),
+          h('div',{className:'ai-bub '+m.role},m.text)
         )),
         loading&&h('div',{className:'ai-msg bot'},h('div',{className:'ai-av bot'},h(Icon,{name:'bot',size:13})),h('div',{className:'ai-bub bot',style:{color:'var(--ink-muted)'}},'Escribiendo…'))
       ),
@@ -414,7 +415,7 @@ function AIAssistant(){
   );
 }
 
-/* ── SIDEBAR ── */
+/* -- SIDEBAR -- */
 function Sidebar({user,page,setPage,setUser}){
   const adminNav=[
     {section:'PANEL',items:[
@@ -456,7 +457,7 @@ function Sidebar({user,page,setPage,setUser}){
     ),
     nav.map(group=>h(Fragment,{key:group.section},
       h('div',{className:'sb-section'},group.section),
-      group.items.map(item=>h('div',{key:item.id,className:`nav-item${page===item.id?' active':''}`,onClick:()=>setPage(item.id)},
+      group.items.map(item=>h('div',{key:item.id,className:(page===item.id?'nav-item active':'nav-item'),onClick:()=>setPage(item.id)},
         h(Icon,{name:item.icon,size:14}),
         h('span',null,item.label),
         item.badge&&unread>0?h('span',{className:'nav-badge'},unread):null
@@ -475,7 +476,7 @@ function Sidebar({user,page,setPage,setUser}){
   );
 }
 
-/* ── LOGIN ── */
+/* -- LOGIN -- */
 function Login({setUser}){
   const [form,setForm]=useState({email:'',password:''});
   const [err,setErr]=useState('');
@@ -518,7 +519,7 @@ function Login({setUser}){
   );
 }
 
-/* ── ADMIN DASHBOARD ── */
+/* -- ADMIN DASHBOARD -- */
 function AdminDash({setPage}){
   const [,upd]=useState(0);
   const clients=store.users.filter(u=>u.role==='client');
@@ -532,7 +533,7 @@ function AdminDash({setPage}){
     return t>0&&getCat(t)!==c.fiscal?.categoria;
   });
   const chartData=MESES_NM.map((mes,i)=>{
-    const p=`${AÑO}-${String(i+1).padStart(2,'0')}`;
+    const p=ANIO+'-'+String(i+1).padStart(2,'0');
     return{mes,monto:allInv.filter(f=>f.periodo===p).reduce((s,f)=>s+f.monto,0)};
   });
   const recentPending=allPay.filter(p=>p.estado!=='pagado').slice(0,7).map(p=>({...p,clientNombre:store.users.find(u=>u.id===p.clientId)?.nombre+' '+store.users.find(u=>u.id===p.clientId)?.apellido}));
@@ -540,9 +541,9 @@ function AdminDash({setPage}){
   return h('div',{className:'page'},
     h('div',{className:'mq4'},
       h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Clientes activos'),h('div',{className:'m-val'},clients.length)),h('div',{className:'m-icon blue'},h(Icon,{name:'users',size:17}))),h('div',{className:'m-sub'},'monotributistas')),
-      h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},`Facturación ${AÑO}`),h('div',{className:'m-val',style:{fontSize:17}},fmt(totalFact))),h('div',{className:'m-icon gold'},h(Icon,{name:'trending',size:17}))),h('div',{className:'m-sub'},'acumulado todos los clientes')),
+      h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Facturación '+ANIO),h('div',{className:'m-val',style:{fontSize:17}},fmt(totalFact))),h('div',{className:'m-icon gold'},h(Icon,{name:'trending',size:17}))),h('div',{className:'m-sub'},'acumulado todos los clientes')),
       h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Pagos pendientes'),h('div',{className:'m-val'},pendientes)),h('div',{className:'m-icon orange'},h(Icon,{name:'clock',size:17}))),h('div',{className:'m-sub'},'sin abonar')),
-      h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Pagos vencidos'),h('div',{className:'m-val'},vencidos)),h('div',{className:'m-icon red'},h(Icon,{name:'alert',size:17}))),h('div',{className:'m-sub'},`${recatAlerts.length} requieren recategorización`))
+      h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Pagos vencidos'),h('div',{className:'m-val'},vencidos)),h('div',{className:'m-icon red'},h(Icon,{name:'alert',size:17}))),h('div',{className:'m-sub'},recatAlerts.length+' requieren recategorizacion'))
     ),
     h('div',{className:'g2',style:{marginBottom:18}},
       h('div',{className:'card'},
@@ -567,7 +568,7 @@ function AdminDash({setPage}){
             if(!count)return null;
             return h('div',{key:cat,style:{display:'flex',alignItems:'center',gap:9,marginBottom:8}},
               h('span',{className:'badge badge-cat'},cat),
-              h('div',{style:{flex:1,background:'var(--surface-2)',borderRadius:99,height:7,overflow:'hidden'}},h('div',{style:{width:`${(count/clients.length)*100}%`,height:'100%',background:'var(--accent)',borderRadius:99}})),
+              h('div',{style:{flex:1,background:'var(--surface-2)',borderRadius:99,height:7,overflow:'hidden'}},h('div',{style:{width:(Math.round((count/clients.length)*100))+'%',height:'100%',background:'var(--accent)',borderRadius:99}})),
               h('span',{style:{fontSize:11.5,fontWeight:600,color:'var(--ink-muted)',minWidth:18}},count)
             );
           })
@@ -596,7 +597,7 @@ function AdminDash({setPage}){
               h('td',null,h('span',{className:'badge badge-gray'},p.tipo==='monotributo'?'Monotributo':'IIBB')),
               h('td',null,p.periodo),
               h('td',{className:'fw6'},fmt(p.monto)),
-              h('td',null,h('span',{className:`badge ${p.estado==='vencido'?'badge-red':'badge-orange'}`},p.estado))
+              h('td',null,h('span',{className:p.estado==='vencido'?'badge badge-red':'badge badge-orange'},p.estado))
             ))
           )
         )
@@ -605,7 +606,7 @@ function AdminDash({setPage}){
   );
 }
 
-/* ── ADMIN CLIENTS ── */
+/* -- ADMIN CLIENTS -- */
 function AdminClients(){
   const [clients,setClients]=useState(store.users.filter(u=>u.role==='client'));
   const [search,setSearch]=useState('');
@@ -614,7 +615,7 @@ function AdminClients(){
   const EF={nombre:'',apellido:'',email:'',password:'',telefono:'',cuit:'',categoria:'A',actividad:'',inicio:'',domicilio:'',iibb:false,nro_iibb:''};
   const [form,setForm]=useState(EF);
   const [msg,setMsg]=useState('');
-  const filtered=clients.filter(c=>`${c.nombre} ${c.apellido} ${c.email} ${c.fiscal?.cuit}`.toLowerCase().includes(search.toLowerCase()));
+  const filtered=clients.filter(c=>(c.nombre+' '+c.apellido+' '+c.email+' '+(c.fiscal?.cuit||'')).toLowerCase().includes(search.toLowerCase()));
   function getFact(id){return(store.invoices[id]||[]).reduce((s,f)=>s+f.monto,0);}
   function getStats(id){const ps=store.payments[id]||[];return{pend:ps.filter(p=>p.estado==='pendiente').length,venc:ps.filter(p=>p.estado==='vencido').length};}
   function F(k,v){setForm(p=>({...p,[k]:v}));}
@@ -652,7 +653,7 @@ function AdminClients(){
     )),
     h('div',{className:'card'},h('div',{className:'tbl-wrap'},
       h('table',null,
-        h('thead',null,h('tr',null,h('th',null,'Cliente'),h('th',null,'CUIT'),h('th',null,'Categoría'),h('th',null,`Facturación ${AÑO}`),h('th',null,'Pagos'),h('th',null,'Actividad'),h('th',null,'Acciones'))),
+        h('thead',null,h('tr',null,h('th',null,'Cliente'),h('th',null,'CUIT'),h('th',null,'Categoría'),h('th',null,'Facturación '+ANIO),h('th',null,'Pagos'),h('th',null,'Actividad'),h('th',null,'Acciones'))),
         h('tbody',null,
           filtered.length===0?h('tr',null,h('td',{colSpan:7},h('div',{className:'empty'},h(Icon,{name:'search',size:28}),h('div',{className:'empty-title'},'Sin resultados')))):
           filtered.map(c=>{
@@ -696,7 +697,7 @@ function AdminClients(){
           h('div',{style:{fontWeight:700,fontSize:10.5,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--ink-muted)',marginBottom:10}},'Datos fiscales'),
           h('div',{className:'form-row'},
             h('div',{className:'form-group'},h('label',{className:'form-label'},'CUIT *'),h('input',{className:'form-input',value:form.cuit,onChange:e=>F('cuit',e.target.value),placeholder:'20-12345678-9'})),
-            h('div',{className:'form-group'},h('label',{className:'form-label'},'Categoría'),h('select',{className:'form-input form-select',value:form.categoria,onChange:e=>F('categoria',e.target.value)},ORDEN.map(c=>h('option',{key:c,value:c},`Cat. ${c} – hasta ${fmt(CATS[c].limite)}/año`))))
+            h('div',{className:'form-group'},h('label',{className:'form-label'},'Categoría'),h('select',{className:'form-input form-select',value:form.categoria,onChange:e=>F('categoria',e.target.value)},ORDEN.map(c=>h('option',{key:c,value:c},'Cat. '+c+' - hasta '+fmt(CATS[c].limite)+'/anio'))))
           ),
           h('div',{className:'form-row'},
             h('div',{className:'form-group'},h('label',{className:'form-label'},'Actividad'),h('input',{className:'form-input',value:form.actividad,onChange:e=>F('actividad',e.target.value)})),
@@ -721,7 +722,7 @@ function AdminClients(){
   );
 }
 
-/* ── ADMIN BILLING ── */
+/* -- ADMIN BILLING -- */
 function AdminBilling(){
   const [,upd]=useState(0);
   const clients=store.users.filter(u=>u.role==='client');
@@ -731,7 +732,7 @@ function AdminBilling(){
   const allInv=useMemo(()=>{const l=[];clients.forEach(c=>(store.invoices[c.id]||[]).forEach(i=>l.push({...i,clientNombre:c.nombre+' '+c.apellido,clientId:c.id})));return l.sort((a,b)=>b.periodo.localeCompare(a.periodo));},[upd]);
   const filtered=filterC?allInv.filter(i=>i.clientId===filterC):allInv;
   const {BarChart,Bar,XAxis,Tooltip,ResponsiveContainer}=Recharts;
-  const chartData=MESES_NM.map((mes,i)=>{const p=`${AÑO}-${String(i+1).padStart(2,'0')}`;return{mes,total:allInv.filter(f=>f.periodo===p).reduce((s,f)=>s+f.monto,0)};});
+  const chartData=MESES_NM.map((mes,i)=>{const p=ANIO+'-'+String(i+1).padStart(2,'0');return{mes,total:allInv.filter(f=>f.periodo===p).reduce((s,f)=>s+f.monto,0)};});
   function save(){
     if(!form.userId||!form.periodo||!form.monto)return;
     const idx=(store.invoices[form.userId]||[]).findIndex(i=>i.periodo===form.periodo);
@@ -744,7 +745,7 @@ function AdminBilling(){
   return h('div',{className:'page'},
     h('div',{className:'sec-hd'},h('div',{className:'sec-title'},'Facturación de clientes'),h('button',{className:'btn btn-primary',onClick:()=>setModal(true)},h(Icon,{name:'plus',size:13}),' Cargar facturación')),
     h('div',{className:'card mb16',style:{marginBottom:16}},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Facturación mensual acumulada')),h('div',{className:'card-bd'},h(ResponsiveContainer,{width:'100%',height:160},h(BarChart,{data:chartData,margin:{top:5,right:5,bottom:0,left:0}},h(XAxis,{dataKey:'mes',tick:{fontSize:10,fill:'#4A5568'},axisLine:false,tickLine:false}),h(Tooltip,{formatter:v=>fmt(v),contentStyle:{borderRadius:8,border:'1px solid var(--border)',fontSize:11}}),h(Bar,{dataKey:'total',fill:'var(--accent)',radius:[4,4,0,0]}))))),
-    h('div',{className:'card mb16',style:{marginBottom:16}},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Resumen anual por cliente')),h('div',{className:'tbl-wrap'},h('table',null,h('thead',null,h('tr',null,h('th',null,'Cliente'),h('th',null,'Cat. actual'),h('th',null,`Facturado ${AÑO}`),h('th',null,'Límite'),h('th',null,'Uso'),h('th',null,'Estado'))),h('tbody',null,resumen.map(c=>{const lim=CATS[c.fiscal?.categoria]?.limite||0;const pct=lim?Math.min(Math.round((c.total/lim)*100),100):0;return h('tr',{key:c.id},h('td',{className:'fw6'},c.nombre+' '+c.apellido),h('td',null,h('span',{className:'badge badge-cat'},c.fiscal?.categoria)),h('td',{className:'fw6'},fmt(c.total)),h('td',{style:{fontSize:12,color:'var(--ink-muted)'}},fmt(lim)),h('td',null,h('div',{style:{display:'flex',alignItems:'center',gap:7}},h('div',{className:'prog-track',style:{height:7,width:72}},h('div',{className:`prog-fill ${pct>=90?'danger':pct>=70?'warn':'safe'}`,style:{width:`${pct}%`}})),h('span',{style:{fontSize:11,fontWeight:600}},pct+'%'))),h('td',null,c.necesita?h('span',{className:'badge badge-orange'},'→ Cat. '+c.catSug+' ⚠️'):h('span',{className:'badge badge-green'},'OK')));})))))
+    h('div',{className:'card mb16',style:{marginBottom:16}},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Resumen anual por cliente')),h('div',{className:'tbl-wrap'},h('table',null,h('thead',null,h('tr',null,h('th',null,'Cliente'),h('th',null,'Cat. actual'),h('th',null,'Facturado '+ANIO),h('th',null,'Límite'),h('th',null,'Uso'),h('th',null,'Estado'))),h('tbody',null,resumen.map(c=>{const lim=CATS[c.fiscal?.categoria]?.limite||0;const pct=lim?Math.min(Math.round((c.total/lim)*100),100):0;return h('tr',{key:c.id},h('td',{className:'fw6'},c.nombre+' '+c.apellido),h('td',null,h('span',{className:'badge badge-cat'},c.fiscal?.categoria)),h('td',{className:'fw6'},fmt(c.total)),h('td',{style:{fontSize:12,color:'var(--ink-muted)'}},fmt(lim)),h('td',null,h('div',{style:{display:'flex',alignItems:'center',gap:7}},h('div',{className:'prog-track',style:{height:7,width:72}},h('div',{className:(pct>=90?'prog-fill danger':pct>=70?'prog-fill warn':'prog-fill safe'),style:{width:pct+'%'}})),h('span',{style:{fontSize:11,fontWeight:600}},pct+'%'))),h('td',null,c.necesita?h('span',{className:'badge badge-orange'},'→ Cat. '+c.catSug+' ⚠️'):h('span',{className:'badge badge-green'},'OK')));})))))
     ),
     h('div',{className:'card'},
       h('div',{className:'card-hd'},h('span',{className:'card-title'},'Detalle mensual'),h('select',{className:'form-input form-select',style:{maxWidth:200,padding:'4px 26px 4px 9px',fontSize:12},value:filterC,onChange:e=>setFilterC(e.target.value)},h('option',{value:''},'Todos los clientes'),clients.map(c=>h('option',{key:c.id,value:c.id},c.nombre+' '+c.apellido)))),
@@ -762,7 +763,7 @@ function AdminBilling(){
   );
 }
 
-/* ── ADMIN IIBB ── */
+/* -- ADMIN IIBB -- */
 function AdminIIBB(){
   const [,upd]=useState(0);
   const clients=store.users.filter(u=>u.role==='client'&&u.fiscal?.iibb);
@@ -794,7 +795,7 @@ function AdminIIBB(){
       h('tbody',null,filtered.length===0?h('tr',null,h('td',{colSpan:8},h('div',{className:'empty'},h('div',{className:'empty-title'},'Sin declaraciones')))):
       filtered.map(dj=>h('tr',{key:dj.id},
         h('td',{className:'fw6'},dj.clientNombre),h('td',null,dj.periodo),h('td',null,fmt(dj.base)),h('td',null,dj.alicuota+'%'),h('td',{className:'fw6'},fmt(dj.monto)),
-        h('td',null,h('span',{className:`badge ${dj.estado==='presentada'?'badge-green':dj.estado==='vencida'?'badge-red':'badge-orange'}`},dj.estado)),
+        h('td',null,h('span',{className:dj.estado==='presentada'?'badge badge-green':dj.estado==='vencida'?'badge badge-red':'badge badge-orange'},dj.estado)),
         h('td',{style:{fontSize:12,color:'var(--ink-muted)'}},dj.fecha||'—'),
         h('td',null,dj.estado!=='presentada'?h('button',{className:'btn btn-success btn-sm',onClick:()=>markPres(dj.clientId,dj.id)},'Marcar presentada'):null)
       )))
@@ -813,7 +814,7 @@ function AdminIIBB(){
   );
 }
 
-/* ── ADMIN PAYMENTS ── */
+/* -- ADMIN PAYMENTS -- */
 function AdminPayments(){
   const [,upd]=useState(0);
   const clients=store.users.filter(u=>u.role==='client');
@@ -848,7 +849,7 @@ function AdminPayments(){
       filtered.map(p=>h('tr',{key:p.id},
         h('td',{className:'fw6'},p.clientNombre),h('td',null,h('span',{className:'badge badge-gray'},p.tipo==='monotributo'?'Monotributo':'IIBB')),h('td',null,p.periodo),h('td',{className:'fw6'},fmt(p.monto)),
         h('td',{style:{fontSize:12,color:p.estado==='vencido'?'var(--red)':'var(--ink-muted)'}},p.fecha_venc||'—'),
-        h('td',null,h('span',{className:`badge ${p.estado==='pagado'?'badge-green':p.estado==='vencido'?'badge-red':'badge-orange'}`},p.estado)),
+        h('td',null,h('span',{className:p.estado==='pagado'?'badge badge-green':p.estado==='vencido'?'badge badge-red':'badge badge-orange'},p.estado)),
         h('td',{style:{fontSize:12,color:'var(--ink-muted)'}},p.fecha_pago||'—'),
         h('td',null,p.estado!=='pagado'?h('button',{className:'btn btn-success btn-sm',onClick:()=>markPaid(p.clientId,p.id)},'Marcar pagado'):null)
       )))
@@ -866,7 +867,7 @@ function AdminPayments(){
   );
 }
 
-/* ── ADMIN MESSAGES ── */
+/* -- ADMIN MESSAGES -- */
 function AdminMessages(){
   const clients=store.users.filter(u=>u.role==='client');
   const [selC,setSelC]=useState(clients[0]?.id||'');
@@ -903,7 +904,7 @@ function AdminMessages(){
           h('div',{className:'chat-msgs',style:{flex:1,maxHeight:'none'}},
             msgs.length===0?h('div',{className:'empty',style:{margin:'auto'}},h(Icon,{name:'msg',size:28}),h('div',{className:'empty-title'},'Sin mensajes')):
             msgs.map(m=>h('div',{key:m.id,style:{display:'flex',flexDirection:'column',alignItems:m.from==='admin'?'flex-end':'flex-start'}},
-              h('div',{className:`bubble ${m.from}`},m.texto),
+              h('div',{className:'bubble '+m.from},m.texto),
               h('div',{className:'bubble-time',style:{color:'var(--ink-muted)'}},new Date(m.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+' · '+(m.from==='admin'?'Franco':store.users.find(u=>u.id===selC)?.nombre))
             )),
             h('div',{ref:endRef})
@@ -915,7 +916,7 @@ function AdminMessages(){
   );
 }
 
-/* ── CALENDAR ── */
+/* -- CALENDAR -- */
 function FiscalCalendar(){
   const today=new Date();
   const [mes,setMes]=useState(today.getMonth()+1);
@@ -956,7 +957,7 @@ function FiscalCalendar(){
       h('div',{className:'cal-grid'},cells.map((dia,i)=>{
         const isToday=dia===today.getDate()&&mes===today.getMonth()+1&&anio===today.getFullYear();
         const evs=dia?cellEvs[dia]:null;
-        return h('div',{key:i,className:`cal-cell${isToday?' today':evs?' has-event':''}`},
+        return h('div',{key:i,className:(isToday?'cal-cell today':evs?'cal-cell has-event':'cal-cell')},
           dia&&h(Fragment,null,
             h('div',{className:'cal-day'},dia),
             evs?.map((ev,j)=>h('div',{key:j,className:'cal-ev',style:{color:isToday?'rgba(255,255,255,.9)':ev.color}},ev.tipo==='mt'?'📘MT':ev.tipo==='ib'?'📗IB':'📙RC'))
@@ -967,7 +968,7 @@ function FiscalCalendar(){
   );
 }
 
-/* ── CLIENT DASHBOARD ── */
+/* -- CLIENT DASHBOARD -- */
 function ClientDash({user}){
   const invoices=store.invoices[user.id]||[];
   const payments=store.payments[user.id]||[];
@@ -982,30 +983,30 @@ function ClientDash({user}){
   const pendientes=payments.filter(p=>p.estado==='pendiente');
   const vencidos=payments.filter(p=>p.estado==='vencido');
   const prog=pct>=90?'danger':pct>=70?'warn':'safe';
-  const chartData=MESES_NM.map((m,i)=>{const p=`${AÑO}-${String(i+1).padStart(2,'0')}`;const f=invoices.find(f=>f.periodo===p);return{mes:m,monto:f?.monto||0};});
+  const chartData=MESES_NM.map((m,i)=>{const p=ANIO+'-'+String(i+1).padStart(2,'0');const f=invoices.find(f=>f.periodo===p);return{mes:m,monto:f?.monto||0};});
   const {BarChart,Bar,XAxis,Tooltip,ResponsiveContainer}=Recharts;
   return h('div',{className:'page'},
     vencidos.length>0&&h('div',{className:'alert danger',style:{marginBottom:14}},h(Icon,{name:'alert',size:14}),h('span',null,h('strong',null,'Tenés '+vencidos.length+' pago'+(vencidos.length>1?'s':'')+' vencido'+(vencidos.length>1?'s':'')+'.'+' Regularizá para evitar intereses.'))),
     pct>=80&&h('div',{className:'alert warn',style:{marginBottom:14}},h(Icon,{name:'alert',size:14}),h('span',null,'Facturaste el ',h('strong',null,pct+'%'),' del límite de tu categoría ',h('strong',null,cat),'. Te quedan ',h('strong',null,fmt(rest)),'. Consultá con Franco.')),
     h('div',{className:'mq4'},
-      h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Facturación '+AÑO),h('div',{className:'m-val',style:{fontSize:18}},fmt(total))),h('div',{className:'m-icon blue'},h(Icon,{name:'trending',size:17}))),h('div',{className:'m-sub'},'de '+fmt(lim))),
+      h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Facturación '+ANIO),h('div',{className:'m-val',style:{fontSize:18}},fmt(total))),h('div',{className:'m-icon blue'},h(Icon,{name:'trending',size:17}))),h('div',{className:'m-sub'},'de '+fmt(lim))),
       h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Categoría actual'),h('div',{className:'m-val',style:{fontSize:40,lineHeight:1}},cat)),h('div',{className:'m-icon gold'},h(Icon,{name:'bar',size:17}))),h('div',{className:'m-sub'},'Monotributo 2026')),
       h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Pagos pendientes'),h('div',{className:'m-val'},pendientes.length)),h('div',{className:'m-icon orange'},h(Icon,{name:'credit',size:17}))),h('div',{className:'m-sub'},vencidos.length+' vencido'+(vencidos.length!==1?'s':''))),
-      h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Proyección anual'),h('div',{className:'m-val',style:{fontSize:17}},fmt(proyec))),h('div',{className:`m-icon ${catProy===cat?'green':'red'}`},h(Icon,{name:'trending',size:17}))),h('div',{className:'m-sub'},'Cat. proyectada: ',h('strong',null,catProy)))
+      h('div',{className:'metric'},h('div',{className:'metric-top'},h('div',null,h('div',{className:'m-lbl'},'Proyección anual'),h('div',{className:'m-val',style:{fontSize:17}},fmt(proyec))),h('div',{className:(catProy===cat?'m-icon green':'m-icon red')},h(Icon,{name:'trending',size:17}))),h('div',{className:'m-sub'},'Cat. proyectada: ',h('strong',null,catProy)))
     ),
     h('div',{className:'card',style:{marginBottom:14}},h('div',{className:'card-bd'},
       h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:8}},h('div',{style:{fontWeight:700,fontSize:13}},'Progreso de facturación – Categoría '+cat),h('div',{style:{fontSize:12.5,fontWeight:700,color:prog==='danger'?'var(--red)':prog==='warn'?'var(--orange)':'var(--green)'}},pct+'%')),
-      h('div',{className:'prog-track',style:{height:14}},h('div',{className:`prog-fill ${prog}`,style:{width:`${pct}%`}})),
+      h('div',{className:'prog-track',style:{height:14}},h('div',{className:'prog-fill '+prog,style:{width:pct+'%'}})),
       h('div',{style:{display:'flex',justifyContent:'space-between',marginTop:7,fontSize:11,color:'var(--ink-muted)'}},h('span','$0'),h('span',{style:{fontWeight:600,color:'var(--ink)'}},fmt(total)+' facturado'),h('span','Límite: '+fmt(lim))),
       pct<90&&h('div',{style:{marginTop:8,fontSize:12,color:'var(--ink-muted)'}},h('span',null,'Te quedan ',h('strong',{style:{color:'var(--ink)'}},fmt(rest)),' para llegar al límite.'))
     )),
     h('div',{className:'g2',style:{marginBottom:14}},
-      h('div',{className:'card'},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Facturación mensual '+AÑO)),h('div',{className:'card-bd'},h(ResponsiveContainer,{width:'100%',height:160},h(BarChart,{data:chartData,margin:{top:5,right:5,bottom:0,left:0}},h(XAxis,{dataKey:'mes',tick:{fontSize:10,fill:'#4A5568'},axisLine:false,tickLine:false}),h(Tooltip,{formatter:v=>fmt(v),contentStyle:{borderRadius:8,border:'1px solid var(--border)',fontSize:11}}),h(Bar,{dataKey:'monto',fill:'var(--accent)',radius:[4,4,0,0]}))))),
+      h('div',{className:'card'},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Facturación mensual '+ANIO)),h('div',{className:'card-bd'},h(ResponsiveContainer,{width:'100%',height:160},h(BarChart,{data:chartData,margin:{top:5,right:5,bottom:0,left:0}},h(XAxis,{dataKey:'mes',tick:{fontSize:10,fill:'#4A5568'},axisLine:false,tickLine:false}),h(Tooltip,{formatter:v=>fmt(v),contentStyle:{borderRadius:8,border:'1px solid var(--border)',fontSize:11}}),h(Bar,{dataKey:'monto',fill:'var(--accent)',radius:[4,4,0,0]}))))),
       h('div',{className:'card'},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Próximos pagos'),h('a',{href:'https://monotributo.economy.gob.ar/',target:'_blank',className:'btn btn-outline btn-sm'},h(Icon,{name:'external',size:11}),' Pagar en ARCA')),h('div',{className:'card-bd',style:{paddingTop:10}},
         [...vencidos,...pendientes].length===0?h('div',{style:{display:'flex',alignItems:'center',gap:7,color:'var(--green)',fontWeight:600}},h(Icon,{name:'check',size:15}),' Todos los pagos al día'):
         [...vencidos,...pendientes].map(p=>h('div',{key:p.id,style:{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid var(--surface-2)'}},
           h('div',null,h('div',{style:{fontWeight:600,fontSize:12.5}},p.tipo==='monotributo'?'Monotributo':'IIBB'),h('div',{style:{fontSize:11,color:'var(--ink-muted)'}},'Vence: '+fmtFecha(p.fecha_venc))),
-          h('div',{style:{textAlign:'right'}},h('div',{style:{fontWeight:700}},fmt(p.monto)),h('span',{className:`badge ${p.estado==='vencido'?'badge-red':'badge-orange'}`},p.estado))
+          h('div',{style:{textAlign:'right'}},h('div',{style:{fontWeight:700}},fmt(p.monto)),h('span',{className:p.estado==='vencido'?'badge badge-red':'badge badge-orange'},p.estado))
         ))
       ))
     ),
@@ -1013,7 +1014,7 @@ function ClientDash({user}){
   );
 }
 
-/* ── CLIENT BILLING ── */
+/* -- CLIENT BILLING -- */
 function ClientBilling({user}){
   const invoices=store.invoices[user.id]||[];
   const mes=new Date().getMonth()+1;
@@ -1025,28 +1026,28 @@ function ClientBilling({user}){
   const proyec=getProyec(total,mes);
   const catP=getCat(proyec);
   const prog=pct>=90?'danger':pct>=70?'warn':'safe';
-  const chartData=MESES_NM.map((m,i)=>{const p=`${AÑO}-${String(i+1).padStart(2,'0')}`;const f=invoices.find(f=>f.periodo===p);return{mes:m,monto:f?.monto||0};});
+  const chartData=MESES_NM.map((m,i)=>{const p=ANIO+'-'+String(i+1).padStart(2,'0');const f=invoices.find(f=>f.periodo===p);return{mes:m,monto:f?.monto||0};});
   const {BarChart,Bar,XAxis,Tooltip,ResponsiveContainer}=Recharts;
   return h('div',{className:'page'},
     h('div',{className:'sec-title',style:{marginBottom:18}},'Mi Facturación'),
     h('div',{className:'mq4',style:{gridTemplateColumns:'repeat(4,1fr)'}},
-      h('div',{className:'metric'},h('div',{className:'m-lbl'},'Total '+AÑO),h('div',{className:'m-val',style:{fontSize:18}},fmt(total)),h('div',{className:'m-sub'},pct+'% del límite')),
+      h('div',{className:'metric'},h('div',{className:'m-lbl'},'Total '+ANIO),h('div',{className:'m-val',style:{fontSize:18}},fmt(total)),h('div',{className:'m-sub'},pct+'% del límite')),
       h('div',{className:'metric'},h('div',{className:'m-lbl'},'Promedio mensual'),h('div',{className:'m-val',style:{fontSize:18}},fmt(prom)),h('div',{className:'m-sub'},mes+' mes'+(mes>1?'es':'') +' analizados')),
       h('div',{className:'metric'},h('div',{className:'m-lbl'},'Proyección anual'),h('div',{className:'m-val',style:{fontSize:17}},fmt(proyec)),h('div',{className:'m-sub'},'Cat. proyectada: ',h('strong',null,catP))),
       h('div',{className:'metric'},h('div',{className:'m-lbl'},'Límite cat. '+cat),h('div',{className:'m-val',style:{fontSize:17}},fmt(lim)),h('div',{className:'m-sub'},'Quedan: '+fmt(Math.max(lim-total,0))))
     ),
     h('div',{className:'card',style:{marginBottom:14}},h('div',{className:'card-bd'},
       h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:8}},h('span',{style:{fontWeight:700,fontSize:13}},'Uso del límite anual – Categoría '+cat),h('span',{style:{fontWeight:700,fontSize:12.5,color:prog==='danger'?'var(--red)':prog==='warn'?'var(--orange)':'var(--green)'}},pct+'% utilizado')),
-      h('div',{className:'prog-track',style:{height:16}},h('div',{className:`prog-fill ${prog}`,style:{width:`${pct}%`}})),
+      h('div',{className:'prog-track',style:{height:16}},h('div',{className:'prog-fill '+prog,style:{width:pct+'%'}})),
       h('div',{style:{display:'flex',justifyContent:'space-between',marginTop:7,fontSize:11,color:'var(--ink-muted)'}},h('span','$0'),h('span',{style:{fontWeight:600,color:'var(--ink)'}},fmt(total)+' facturado'),h('span','Límite: '+fmt(lim)))
     )),
-    h('div',{className:'card',style:{marginBottom:14}},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Facturación mensual '+AÑO)),h('div',{className:'card-bd'},h(ResponsiveContainer,{width:'100%',height:180},h(BarChart,{data:chartData,margin:{top:5,right:5,bottom:0,left:0}},h(XAxis,{dataKey:'mes',tick:{fontSize:10,fill:'#4A5568'},axisLine:false,tickLine:false}),h(Tooltip,{formatter:v=>fmt(v),contentStyle:{borderRadius:8,border:'1px solid var(--border)',fontSize:11}}),h(Bar,{dataKey:'monto',fill:'var(--accent)',radius:[4,4,0,0]}))))),
+    h('div',{className:'card',style:{marginBottom:14}},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Facturación mensual '+ANIO)),h('div',{className:'card-bd'},h(ResponsiveContainer,{width:'100%',height:180},h(BarChart,{data:chartData,margin:{top:5,right:5,bottom:0,left:0}},h(XAxis,{dataKey:'mes',tick:{fontSize:10,fill:'#4A5568'},axisLine:false,tickLine:false}),h(Tooltip,{formatter:v=>fmt(v),contentStyle:{borderRadius:8,border:'1px solid var(--border)',fontSize:11}}),h(Bar,{dataKey:'monto',fill:'var(--accent)',radius:[4,4,0,0]}))))),
     h('div',{className:'card'},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Detalle mensual')),h('div',{className:'tbl-wrap'},h('table',null,h('thead',null,h('tr',null,h('th',null,'Mes'),h('th',null,'Período'),h('th',null,'Monto'),h('th',null,'Acumulado'))),h('tbody',null,invoices.length===0?h('tr',null,h('td',{colSpan:4},h('div',{className:'empty'},h('div',{className:'empty-title'},'Sin datos de facturación'),h('p',{style:{fontSize:12}},'Tu contador carga estos datos')))):
     [...invoices].reverse().map(f=>{const mi=parseInt(f.periodo.split('-')[1])-1;const acum=invoices.filter(fi=>fi.periodo<=f.periodo).reduce((s,fi)=>s+fi.monto,0);return h('tr',{key:f.id},h('td',{className:'fw6'},MESES_FL[mi]),h('td',{style:{fontSize:12,color:'var(--ink-muted)'}},f.periodo),h('td',{className:'fw6'},fmt(f.monto)),h('td',{style:{color:'var(--ink-muted)'}},fmt(acum)));})))))
   );
 }
 
-/* ── CLIENT IIBB ── */
+/* -- CLIENT IIBB -- */
 function ClientIIBB({user}){
   const djs=store.iibb[user.id]||[];
   if(!user.fiscal?.iibb)return h('div',{className:'page'},h('div',{className:'sec-title',style:{marginBottom:18}},'IIBB / Declaraciones Juradas'),h('div',{className:'card'},h('div',{className:'card-bd'},h('div',{className:'empty'},h(Icon,{name:'book',size:32}),h('div',{className:'empty-title'},'No estás inscripto en Ingresos Brutos'),h('p',{style:{fontSize:12.5}},'Si necesitás inscribirte, contactá a Franco.')))));
@@ -1062,11 +1063,11 @@ function ClientIIBB({user}){
     totals.pend>0&&h('div',{className:'alert info',style:{marginBottom:14}},h(Icon,{name:'book',size:14}),h('span',null,'Tenés ',h('strong',null,totals.pend),' declaración'+(totals.pend>1?'es':'')+' pendiente'+(totals.pend>1?'s':'')+'. Tu contador Franco se encarga de presentarlas.')),
     totals.venc>0&&h('div',{className:'alert danger',style:{marginBottom:14}},h(Icon,{name:'alert',size:14}),h('span',null,'Tenés ',h('strong',null,totals.venc),' DJ vencida'+(totals.venc>1?'s':'')+'. Contactá a Franco para regularizar.')),
     h('div',{className:'card'},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Historial de Declaraciones')),h('div',{className:'tbl-wrap'},h('table',null,h('thead',null,h('tr',null,h('th',null,'Período'),h('th',null,'Base Imponible'),h('th',null,'Alícuota'),h('th',null,'Monto'),h('th',null,'Estado'),h('th',null,'Presentación'))),h('tbody',null,djs.length===0?h('tr',null,h('td',{colSpan:6},h('div',{className:'empty'},h('div',{className:'empty-title'},'Sin declaraciones')))):
-    [...djs].reverse().map(dj=>h('tr',{key:dj.id},h('td',{className:'fw6'},dj.periodo),h('td',null,fmt(dj.base)),h('td',null,dj.alicuota+'%'),h('td',{className:'fw6'},fmt(dj.monto)),h('td',null,h('span',{className:`badge ${dj.estado==='presentada'?'badge-green':dj.estado==='vencida'?'badge-red':'badge-orange'}`},dj.estado)),h('td',{style:{fontSize:12,color:'var(--ink-muted)'}},dj.fecha||'—')))))))
+    [...djs].reverse().map(dj=>h('tr',{key:dj.id},h('td',{className:'fw6'},dj.periodo),h('td',null,fmt(dj.base)),h('td',null,dj.alicuota+'%'),h('td',{className:'fw6'},fmt(dj.monto)),h('td',null,h('span',{className:dj.estado==='presentada'?'badge badge-green':dj.estado==='vencida'?'badge badge-red':'badge badge-orange'},dj.estado)),h('td',{style:{fontSize:12,color:'var(--ink-muted)'}},dj.fecha||'—')))))))
   );
 }
 
-/* ── CLIENT PAYMENTS ── */
+/* -- CLIENT PAYMENTS -- */
 function ClientPayments({user}){
   const payments=store.payments[user.id]||[];
   const pagados=payments.filter(p=>p.estado==='pagado').sort((a,b)=>b.periodo.localeCompare(a.periodo));
@@ -1081,13 +1082,13 @@ function ClientPayments({user}){
       h('td',{className:'fw6'},p.periodo),h('td',{className:'fw6'},fmt(p.monto)),
       h('td',{style:{fontSize:12,color:'var(--ink-muted)'}},fmtFecha(p.fecha_venc)),
       h('td',{style:{fontSize:12,color:'var(--ink-muted)'}},fmtFecha(p.fecha_pago)),
-      h('td',null,h('span',{className:`badge ${p.estado==='pagado'?'badge-green':p.estado==='vencido'?'badge-red':'badge-orange'}`},p.estado))
+      h('td',null,h('span',{className:p.estado==='pagado'?'badge badge-green':p.estado==='vencido'?'badge badge-red':'badge badge-orange'},p.estado))
     );
   }
   return h('div',{className:'page'},
     h('div',{className:'sec-title',style:{marginBottom:18}},'Mis Pagos'),
     h('div',{className:'mq3'},
-      h('div',{className:'metric'},h('div',{className:'m-lbl'},'Total abonado '+AÑO),h('div',{className:'m-val',style:{fontSize:18}},fmt(totalPag)),h('div',{className:'m-sub'},pagados.length+' pagos realizados')),
+      h('div',{className:'metric'},h('div',{className:'m-lbl'},'Total abonado '+ANIO),h('div',{className:'m-val',style:{fontSize:18}},fmt(totalPag)),h('div',{className:'m-sub'},pagados.length+' pagos realizados')),
       h('div',{className:'metric'},h('div',{className:'m-lbl'},'Pendiente de pago'),h('div',{className:'m-val',style:{fontSize:18,color:totalPend>0?'var(--orange)':'var(--green)'}},fmt(totalPend)),h('div',{className:'m-sub'},(pendientes.length+vencidos.length)+' cuotas')),
       h('div',{className:'metric'},h('div',{className:'m-lbl'},'Vencidos'),h('div',{className:'m-val',style:{color:vencidos.length>0?'var(--red)':'var(--green)'}},vencidos.length),h('div',{className:'m-sub'},vencidos.length===0?'Sin vencidos ✓':'Regularizá cuanto antes'))
     ),
@@ -1103,7 +1104,7 @@ function ClientPayments({user}){
   );
 }
 
-/* ── CLIENT ALERTS ── */
+/* -- CLIENT ALERTS -- */
 function ClientAlerts({user}){
   const cat=user.fiscal?.categoria;
   const invoices=store.invoices[user.id]||[];
@@ -1116,16 +1117,16 @@ function ClientAlerts({user}){
   const vencidos=payments.filter(p=>p.estado==='vencido');
   const pendientes=payments.filter(p=>p.estado==='pendiente');
   const alerts=[];
-  if(pct>=90)alerts.push({tipo:'danger',icon:'alert',titulo:'🚨 Límite de categoría casi alcanzado',desc:`Facturaste el ${pct}% del límite de la Categoría ${cat}. Te quedan ${fmt(rest)}. Consultá con Franco urgente.`});
-  else if(pct>=70)alerts.push({tipo:'warn',icon:'alert',titulo:'⚠️ Acercándote al límite',desc:`Facturaste ${pct}% del límite de tu categoría. Te quedan ${fmt(rest)}.`});
-  if(total>0&&catCorr!==cat)alerts.push({tipo:'warn',icon:'alert',titulo:'⚠️ Revisión de categoría',desc:`Según tu facturación (${fmt(total)}), deberías estar en Categoría ${catCorr}. Hablá con Franco.`});
-  if(vencidos.length>0)alerts.push({tipo:'danger',icon:'credit',titulo:`🔴 ${vencidos.length} pago${vencidos.length>1?'s':''} vencido${vencidos.length>1?'s':''}`,desc:'Tenés pagos sin abonar con fecha vencida. Regularizá para evitar multas.'});
-  if(pendientes.length>0)alerts.push({tipo:'info',icon:'credit',titulo:`📋 ${pendientes.length} pago${pendientes.length>1?'s':''} próximo${pendientes.length>1?'s':''}`,desc:'El monotributo vence el día 20 de cada mes.'});
-  if(mes===1||mes===7)alerts.push({tipo:'info',icon:'calendar',titulo:'📅 Período de recategorización',desc:`Estamos en período de recategorización. Tu contador revisará si corresponde cambiar tu categoría.`});
+  if(pct>=90)alerts.push({tipo:'danger',icon:'alert',titulo:'🚨 Límite de categoría casi alcanzado',desc:'Facturaste el '+pct+'% del limite de la Categoria '+cat+'. Te quedan '+fmt(rest)+'. Consulta con Franco urgente.'});
+  else if(pct>=70)alerts.push({tipo:'warn',icon:'alert',titulo:'⚠️ Acercándote al límite',desc:'Facturaste '+pct+'% del limite de tu categoria. Te quedan '+fmt(rest)+'.'});
+  if(total>0&&catCorr!==cat)alerts.push({tipo:'warn',icon:'alert',titulo:'⚠️ Revisión de categoría',desc:'Segun tu facturacion ('+fmt(total)+'), deberias estar en Categoria '+catCorr+'. Habla con Franco.'});
+  if(vencidos.length>0)alerts.push({tipo:'danger',icon:'credit',titulo:'Pagos vencidos: '+vencidos.length,desc:'Tenés pagos sin abonar con fecha vencida. Regularizá para evitar multas.'});
+  if(pendientes.length>0)alerts.push({tipo:'info',icon:'credit',titulo:'Pagos proximos: '+pendientes.length,desc:'El monotributo vence el día 20 de cada mes.'});
+  if(mes===1||mes===7)alerts.push({tipo:'info',icon:'calendar',titulo:'📅 Período de recategorización',desc:'Estamos en periodo de recategorizacion. Tu contador revisara si corresponde cambiar tu categoria.'});
   if(alerts.length===0)alerts.push({tipo:'success',icon:'check',titulo:'✅ Todo en orden',desc:'No tenés alertas pendientes. Tus pagos están al día y tu facturación está dentro del límite.'});
   return h('div',{className:'page'},
     h('div',{className:'sec-title',style:{marginBottom:18}},'Alertas y Avisos'),
-    h('div',{style:{display:'flex',flexDirection:'column',gap:10}},alerts.map((a,i)=>h('div',{key:i,className:`alert ${a.tipo}`,style:{padding:'14px 16px'}},h(Icon,{name:a.icon,size:15}),h('div',null,h('div',{style:{fontWeight:700,marginBottom:3}},a.titulo),h('div',{style:{fontSize:12.5,opacity:.9}},a.desc))))),
+    h('div',{style:{display:'flex',flexDirection:'column',gap:10}},alerts.map((a,i)=>h('div',{key:i,className:'alert '+a.tipo,style:{padding:'14px 16px'}},h(Icon,{name:a.icon,size:15}),h('div',null,h('div',{style:{fontWeight:700,marginBottom:3}},a.titulo),h('div',{style:{fontSize:12.5,opacity:.9}},a.desc))))),
     h('div',{className:'card',style:{marginTop:20}},h('div',{className:'card-hd'},h('span',{className:'card-title'},'Fechas clave')),h('div',{className:'card-bd',style:{paddingTop:10}},
       [{dia:'Día 20 de cada mes',desc:'Vencimiento cuota Monotributo',col:'var(--accent)'},{dia:'Día 15 de cada mes',desc:'Vencimiento Ingresos Brutos',col:'var(--green)'},{dia:'Enero y Julio',desc:'Recategorización (del 1 al 20)',col:'var(--orange)'},{dia:'Diciembre',desc:'Revisar proyección anual',col:'var(--gold)'}].map((f,i)=>h('div',{key:i,style:{display:'flex',alignItems:'center',gap:12,padding:'9px 0',borderBottom:i<3?'1px solid var(--surface-2)':'none'}},h('div',{style:{width:9,height:9,borderRadius:'50%',background:f.col,flexShrink:0}}),h('div',{style:{fontWeight:700,fontSize:12.5,minWidth:155}},f.dia),h('div',{style:{fontSize:12.5,color:'var(--ink-muted)'}},f.desc)))
       )
@@ -1133,7 +1134,7 @@ function ClientAlerts({user}){
   );
 }
 
-/* ── CLIENT MESSAGES ── */
+/* -- CLIENT MESSAGES -- */
 function ClientMessages({user}){
   const [,upd]=useState(0);
   const [input,setInput]=useState('');
@@ -1157,7 +1158,7 @@ function ClientMessages({user}){
         msgs.length===0?h('div',{className:'empty',style:{margin:'auto'}},h(Icon,{name:'msg',size:30}),h('div',{className:'empty-title'},'Sin mensajes aún'),h('p',{style:{fontSize:12}},'Escribile a Franco con cualquier consulta')):
         msgs.map(m=>h('div',{key:m.id,style:{display:'flex',flexDirection:'column',alignItems:m.from==='client'?'flex-end':'flex-start'}},
           h('div',{style:{fontSize:10,color:'var(--ink-muted)',marginBottom:2}},m.from==='admin'?'Franco Armand Pilon':'Vos'),
-          h('div',{className:`bubble ${m.from}`},m.texto),
+          h('div',{className:'bubble '+m.from},m.texto),
           h('div',{className:'bubble-time',style:{color:'var(--ink-muted)'}},new Date(m.fecha).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))
         )),
         h('div',{ref:endRef})
@@ -1167,7 +1168,7 @@ function ClientMessages({user}){
   );
 }
 
-/* ── PAGE TITLES ── */
+/* -- PAGE TITLES -- */
 const TITLES={
   'admin-dash':'Dashboard','admin-clients':'Clientes','admin-billing':'Facturación','admin-iibb':'IIBB / Declaraciones Juradas',
   'admin-payments':'Gestión de Pagos','calendar':'Calendario Fiscal','admin-messages':'Mensajes',
@@ -1175,7 +1176,7 @@ const TITLES={
   'client-payments':'Mis Pagos','client-alerts':'Alertas','client-messages':'Mensajes',
 };
 
-/* ── APP ── */
+/* -- APP -- */
 function App(){
   const [user,setUser]=useState(()=>{try{const s=localStorage.getItem('gf_user');return s?JSON.parse(s):null;}catch{return null;}});
   const [page,setPage]=useState(null);
