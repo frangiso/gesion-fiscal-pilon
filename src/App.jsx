@@ -760,28 +760,95 @@ function ClientBill({ user }) {
   const [invs, setInvs] = useState([])
   const [loading, setLoading] = useState(true)
   useEffect(() => { getInvoices(user.id).then(i => { setInvs(i); setLoading(false) }) }, [user.id])
-  const mes = new Date().getMonth() + 1
+  const hoy = new Date()
+  const mes = hoy.getMonth() + 1
   const cat = user.fiscal?.cat || 'A'
   const total = invs.reduce((s, f) => s + f.monto, 0)
   const pct = getPct(total, cat); const lim = CATS[cat]?.lim || 0
   const prom = mes > 0 ? Math.round(total / mes) : 0
   const proy = getProy(total, mes); const catP = getCat(proy)
+  const cuotaActual = CATS[cat]?.cuota || 0
+  const cuotaCorrespondiente = CATS[catP]?.cuota || cuotaActual
+
+  // Periodo fiscal vigente:
+  // Recategorización julio: mira 01/01 al 31/12 del año anterior
+  // Recategorización enero: mira 01/07 del año anterior al 30/06 del año actual
+  // Ahora (marzo 2026): periodo vigente es 01/07/2025 al 30/06/2026
+  const periodoDesde = mes >= 7 ? `01/07/${hoy.getFullYear()}` : `01/07/${hoy.getFullYear() - 1}`
+  const periodoHasta = mes >= 7 ? `30/06/${hoy.getFullYear() + 1}` : `30/06/${hoy.getFullYear()}`
+  const proxRecat = mes >= 7 ? `Enero ${hoy.getFullYear() + 1}` : `Julio ${hoy.getFullYear()}`
+
+  // Relacion de dependencia: aportes del empleado = 17% del sueldo bruto
+  // Jubilacion 11% + Obra Social 3% + PAMI 3%
+  const aporteRD = Math.round(prom * 0.17)
+  const diferencia = cuotaActual - aporteRD
+
   const chartData = MN.map((m, i) => { const p = `${ANIO}-${String(i + 1).padStart(2, '0')}`; const f = invs.find(f => f.per === p); return { mes: m, monto: f ? f.monto : 0 } })
   if (loading) return <div className="page"><div className="empty">Cargando...</div></div>
   return (
     <div className="page">
       <div className="sec-title" style={{ marginBottom: 16 }}>Mi Facturacion</div>
+
+      {/* Cartel periodo fiscal */}
+      <div className="alert-box alert-info" style={{ marginBottom: 16 }}>
+        <div>
+          <div style={{ fontWeight: 700, marginBottom: 3 }}>Periodo fiscal vigente: {periodoDesde} al {periodoHasta}</div>
+          <div style={{ fontSize: 12 }}>El monto facturado en este periodo es el que se tiene en cuenta para tu recategorizacion. Proxima recategorizacion: <strong>{proxRecat}</strong></div>
+        </div>
+      </div>
+
       <div className="mq4">
         <div className="metric"><div className="m-lbl">Total {ANIO}</div><div className="m-val" style={{ fontSize: 18 }}>{fmt(total)}</div><div className="m-sub">{pct}% del limite</div></div>
         <div className="metric"><div className="m-lbl">Promedio mensual</div><div className="m-val" style={{ fontSize: 18 }}>{fmt(prom)}</div><div className="m-sub">{mes} mes{mes > 1 ? 'es' : ''} analizados</div></div>
         <div className="metric"><div className="m-lbl">Proyeccion anual</div><div className="m-val" style={{ fontSize: 17 }}>{fmt(proy)}</div><div className="m-sub">Cat. proyectada: <strong>{catP}</strong></div></div>
         <div className="metric"><div className="m-lbl">Limite cat. {cat}</div><div className="m-val" style={{ fontSize: 17 }}>{fmt(lim)}</div><div className="m-sub">Quedan: {fmt(Math.max(lim - total, 0))}</div></div>
       </div>
+
+      {/* Cuotas y comparacion */}
+      <div className="g2" style={{ marginBottom: 14 }}>
+        <div className="card"><div className="card-hd"><span className="card-title">Cuota mensual del monotributo</span></div><div className="card-bd" style={{ paddingTop: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #ECEEF4' }}>
+            <div><div style={{ fontWeight: 600, fontSize: 13 }}>Categoria actual ({cat})</div><div style={{ fontSize: 11.5, color: '#4A5568' }}>Lo que pagas ahora</div></div>
+            <div style={{ fontWeight: 700, fontSize: 17 }}>{fmt(cuotaActual)}/mes</div>
+          </div>
+          {catP !== cat
+            ? <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #ECEEF4' }}>
+                <div><div style={{ fontWeight: 600, fontSize: 13, color: '#C45A0A' }}>Si te recategorias a {catP}</div><div style={{ fontSize: 11.5, color: '#4A5568' }}>Cuota que corresponde a tu facturacion</div></div>
+                <div style={{ fontWeight: 700, fontSize: 17, color: '#C45A0A' }}>{fmt(cuotaCorrespondiente)}/mes</div>
+              </div>
+            : <div style={{ padding: '9px 0', fontSize: 12.5, color: '#0A6E3E', fontWeight: 600 }}>Tu cuota corresponde a tu facturacion actual.</div>
+          }
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0' }}>
+            <div><div style={{ fontWeight: 600, fontSize: 13 }}>Cuota anual estimada</div><div style={{ fontSize: 11.5, color: '#4A5568' }}>12 meses x cuota actual</div></div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>{fmt(cuotaActual * 12)}/anio</div>
+          </div>
+        </div></div>
+
+        <div className="card"><div className="card-hd"><span className="card-title">Monotributo vs Relacion de Dependencia</span></div><div className="card-bd" style={{ paddingTop: 10 }}>
+          <div style={{ fontSize: 11.5, color: '#4A5568', marginBottom: 10 }}>Comparacion basada en tu ingreso promedio mensual de {fmt(prom)}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #ECEEF4' }}>
+            <div><div style={{ fontWeight: 600, fontSize: 13, color: '#1B4FD8' }}>Monotributo (cuota fija)</div><div style={{ fontSize: 11.5, color: '#4A5568' }}>Cuota categoria {cat}</div></div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: '#1B4FD8' }}>{fmt(cuotaActual)}/mes</div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #ECEEF4' }}>
+            <div><div style={{ fontWeight: 600, fontSize: 13, color: '#4A5568' }}>Relacion de dependencia</div><div style={{ fontSize: 11.5, color: '#4A5568' }}>17% del ingreso (Jub. 11% + OS 3% + PAMI 3%)</div></div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>{fmt(aporteRD)}/mes</div>
+          </div>
+          <div style={{ padding: '9px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 13 }}>{diferencia >= 0 ? 'Pagás mas siendo monotributista' : 'Pagás menos siendo monotributista'}</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: diferencia >= 0 ? '#C0291A' : '#0A6E3E' }}>{diferencia >= 0 ? '+' : ''}{fmt(diferencia)}/mes</div>
+          </div>
+          {prom === 0 && <div style={{ fontSize: 11.5, color: '#4A5568', fontStyle: 'italic' }}>Carga tu facturacion para ver la comparacion.</div>}
+        </div></div>
+      </div>
+
+      {/* Barra de progreso */}
       <div className="card" style={{ marginBottom: 14 }}><div className="card-bd">
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span style={{ fontWeight: 700, fontSize: 13 }}>Uso del limite anual - Categoria {cat}</span><span style={{ fontWeight: 700, fontSize: 12.5, color: progColor(pct) }}>{pct}% utilizado</span></div>
         <div className="prog-track" style={{ height: 16 }}><div className="prog-fill" style={{ width: `${pct}%`, background: progColor(pct) }} /></div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7, fontSize: 11, color: '#4A5568' }}><span>$0</span><span style={{ fontWeight: 600, color: '#0D1117' }}>{fmt(total)} facturado</span><span>Limite: {fmt(lim)}</span></div>
       </div></div>
+
       <div className="card" style={{ marginBottom: 14 }}><div className="card-hd"><span className="card-title">Facturacion mensual {ANIO}</span></div><div className="card-bd"><ResponsiveContainer width="100%" height={180}><BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}><XAxis dataKey="mes" tick={{ fontSize: 10, fill: '#4A5568' }} axisLine={false} tickLine={false} /><Tooltip formatter={v => fmt(v)} contentStyle={{ borderRadius: 8, border: '1px solid #DDE1EC', fontSize: 11 }} /><Bar dataKey="monto" fill="#1B4FD8" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div></div>
       <div className="card"><div className="card-hd"><span className="card-title">Detalle mensual</span></div><div className="tbl-wrap"><table><thead><tr><th>Mes</th><th>Periodo</th><th>Monto</th><th>Acumulado</th><th></th></tr></thead>
         <tbody>{invs.length === 0 ? <tr><td colSpan={5}><div className="empty"><div className="empty-title">Sin datos</div><p style={{ fontSize: 12 }}>Tu contador carga estos datos</p></div></td></tr> :
