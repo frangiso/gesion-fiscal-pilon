@@ -766,9 +766,11 @@ function ClientBill({ user }) {
   const total = invs.reduce((s, f) => s + f.monto, 0)
   const pct = getPct(total, cat); const lim = CATS[cat]?.lim || 0
   const prom = mes > 0 ? Math.round(total / mes) : 0
-  const proy = getProy(total, mes); const catP = getCat(proy)
+  const proy = getProy(total, mes)
+  // Categoria que corresponde segun lo facturado REAL (no proyectado)
+  const catCorresponde = getCat(total)
   const cuotaActual = CATS[cat]?.cuota || 0
-  const cuotaCorrespondiente = CATS[catP]?.cuota || cuotaActual
+  const cuotaCorrespondiente = CATS[catCorresponde]?.cuota || cuotaActual
 
   // Periodo fiscal vigente:
   // Recategorización julio: mira 01/01 al 31/12 del año anterior
@@ -800,7 +802,7 @@ function ClientBill({ user }) {
       <div className="mq4">
         <div className="metric"><div className="m-lbl">Total {ANIO}</div><div className="m-val" style={{ fontSize: 18 }}>{fmt(total)}</div><div className="m-sub">{pct}% del limite</div></div>
         <div className="metric"><div className="m-lbl">Promedio mensual</div><div className="m-val" style={{ fontSize: 18 }}>{fmt(prom)}</div><div className="m-sub">{mes} mes{mes > 1 ? 'es' : ''} analizados</div></div>
-        <div className="metric"><div className="m-lbl">Proyeccion anual</div><div className="m-val" style={{ fontSize: 17 }}>{fmt(proy)}</div><div className="m-sub">Cat. proyectada: <strong>{catP}</strong></div></div>
+        <div className="metric"><div className="m-lbl">Categoria que corresponde</div><div className="m-val" style={{ fontSize: 40, lineHeight: 1 }}>{catCorresponde}</div><div className="m-sub">Segun lo facturado real</div></div>
         <div className="metric"><div className="m-lbl">Limite cat. {cat}</div><div className="m-val" style={{ fontSize: 17 }}>{fmt(lim)}</div><div className="m-sub">Quedan: {fmt(Math.max(lim - total, 0))}</div></div>
       </div>
 
@@ -811,9 +813,9 @@ function ClientBill({ user }) {
             <div><div style={{ fontWeight: 600, fontSize: 13 }}>Categoria actual ({cat})</div><div style={{ fontSize: 11.5, color: '#4A5568' }}>Lo que pagas ahora</div></div>
             <div style={{ fontWeight: 700, fontSize: 17 }}>{fmt(cuotaActual)}/mes</div>
           </div>
-          {catP !== cat
+          {catCorresponde !== cat
             ? <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #ECEEF4' }}>
-                <div><div style={{ fontWeight: 600, fontSize: 13, color: '#C45A0A' }}>Si te recategorias a {catP}</div><div style={{ fontSize: 11.5, color: '#4A5568' }}>Cuota que corresponde a tu facturacion</div></div>
+                <div><div style={{ fontWeight: 600, fontSize: 13, color: '#C45A0A' }}>Si te recategorias a {catCorresponde}</div><div style={{ fontSize: 11.5, color: '#4A5568' }}>Cuota que corresponde a tu facturacion</div></div>
                 <div style={{ fontWeight: 700, fontSize: 17, color: '#C45A0A' }}>{fmt(cuotaCorrespondiente)}/mes</div>
               </div>
             : <div style={{ padding: '9px 0', fontSize: 12.5, color: '#0A6E3E', fontWeight: 600 }}>Tu cuota corresponde a tu facturacion actual.</div>
