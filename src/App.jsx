@@ -60,10 +60,10 @@ function AIAsist() {
 // ── NAV ───────────────────────────────────────────────────────
 const ADMIN_NAV = [
   { sec: 'PANEL', items: [{ lbl: 'Dashboard', id: 'adash' }, { lbl: 'Clientes', id: 'aclients' }, { lbl: 'Facturacion', id: 'abillin' }, { lbl: 'IIBB / DJ', id: 'aiibb' }] },
-  { sec: 'GESTION', items: [{ lbl: 'Emitir Factura', id: 'afacturar' }, { lbl: 'Pagos', id: 'apay' }, { lbl: 'Calendario Fiscal', id: 'acal' }, { lbl: 'Mensajes', id: 'amsgs' }] },
+  { sec: 'GESTION', items: [{ lbl: 'Pagos', id: 'apay' }, { lbl: 'Calendario Fiscal', id: 'acal' }, { lbl: 'Mensajes', id: 'amsgs' }] },
 ]
 const CLIENT_NAV = [
-  { sec: 'MI CUENTA', items: [{ lbl: 'Dashboard', id: 'cdash' }, { lbl: 'Facturacion', id: 'cbill' }, { lbl: 'Importar Facturas', id: 'cimport' }, { lbl: 'IIBB / DJ', id: 'ciibb' }, { lbl: 'Pagos', id: 'cpay' }] },
+  { sec: 'MI CUENTA', items: [{ lbl: 'Dashboard', id: 'cdash' }, { lbl: 'Facturacion', id: 'cbill' }, { lbl: 'Emitir Factura', id: 'cfacturar' }, { lbl: 'Importar Facturas', id: 'cimport' }, { lbl: 'IIBB / DJ', id: 'ciibb' }, { lbl: 'Pagos', id: 'cpay' }] },
   { sec: 'HERRAMIENTAS', items: [{ lbl: 'Calendario Fiscal', id: 'cal' }, { lbl: 'Alertas', id: 'calerts' }, { lbl: 'Mensajes', id: 'cmsgs' }] },
 ]
 
@@ -1043,11 +1043,15 @@ function ImportarFacturas({ user }) {
   )
 }
 
-// ── EMITIR FACTURA ────────────────────────────────────────────
-function EmitirFactura() {
-  const [clients, setClients] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ uid: '', concepto: '1', importe: '', descripcion: '' })
+// ── EMITIR FACTURA (CLIENTE) ──────────────────────────────────
+function EmitirFactura({ user }) {
+  const [form, setForm] = useState({
+    cuitReceptor: '',
+    nombreReceptor: '',
+    concepto: '2',
+    importe: '',
+    descripcion: ''
+  })
   const [resultado, setResultado] = useState(null)
   const [error, setError] = useState('')
   const [emitiendo, setEmitiendo] = useState(false)
@@ -1055,37 +1059,39 @@ function EmitirFactura() {
   const F = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
   useEffect(() => {
-    getAllClients().then(c => { setClients(c); setLoading(false) })
-    // Cargar facturas emitidas desde Firestore
-    import('./db').then(m => {
-      if (m.getFacturasEmitidas) m.getFacturasEmitidas().then(setFacturas).catch(() => {})
+    getInvoices(user.id).then(inv => {
+      // Mostrar solo las que tienen CAE
+      setFacturas(inv.filter(i => i.cae).sort((a, b) => b.per?.localeCompare(a.per)))
     })
-  }, [])
+  }, [user.id])
 
-  const clienteSel = clients.find(c => c.id === form.uid)
+  const cuitEmisor = user.fiscal?.cuit?.replace(/-/g, '') || ''
 
   const emitir = async () => {
-    if (!form.uid || !form.importe) { setError('Selecciona un cliente y completá el importe'); return }
-    if (!clienteSel?.fiscal?.cuit) { setError('El cliente no tiene CUIT cargado'); return }
+    if (!form.cuitReceptor || !form.importe) { setError('Completá el CUIT del receptor y el importe'); return }
+    if (!cuitEmisor) { setError('Tu perfil no tiene CUIT cargado. Contactá a tu contador.'); return }
+    if (form.cuitReceptor.replace(/-/g, '').length < 10) { setError('CUIT del receptor inválido'); return }
     setEmitiendo(true); setError(''); setResultado(null)
     try {
       const res = await fetch('/api/facturar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cuitEmisor: '20364163739',
-          cuitReceptor: clienteSel.fiscal.cuit.replace(/-/g, ''),
+          cuitEmisor: cuitEmisor,
+          cuitReceptor: form.cuitReceptor.replace(/-/g, ''),
+          nombreReceptor: form.nombreReceptor,
           concepto: parseInt(form.concepto),
           importeTotal: parseFloat(form.importe),
-          descripcion: form.descripcion || `Honorarios profesionales - ${clienteSel.nombre} ${clienteSel.apellido}`
+          descripcion: form.descripcion || 'Servicios profesionales'
         })
       })
       const data = await res.json()
       if (data.error) { setError('Error ARCA: ' + data.error); setEmitiendo(false); return }
       setResultado(data)
-      // Guardar en Firestore
-      await upsertInvoice(form.uid, new Date().toISOString().slice(0, 7), parseFloat(form.importe))
-      setForm(p => ({ ...p, importe: '', descripcion: '' }))
+      // Guardar en Firestore con CAE
+      await upsertInvoice(user.id, new Date().toISOString().slice(0, 7), parseFloat(form.importe))
+      setFacturas(prev => [{ id: Date.now(), per: new Date().toISOString().slice(0, 7), monto: parseFloat(form.importe), cae: data.CAE, nro: data.nroComprobante, receptor: form.nombreReceptor || form.cuitReceptor }, ...prev])
+      setForm(p => ({ ...p, cuitReceptor: '', nombreReceptor: '', importe: '', descripcion: '' }))
     } catch (e) {
       setError('Error al conectar con ARCA: ' + e.message)
     }
@@ -1101,7 +1107,13 @@ function EmitirFactura() {
   return (
     <div className="page">
       <div className="sec-title" style={{ marginBottom: 6 }}>Emitir Factura C</div>
-      <p style={{ color: '#4A5568', fontSize: 13, marginBottom: 20 }}>Emitís facturas electrónicas directamente desde el sistema. El CAE se obtiene en tiempo real de ARCA.</p>
+      <p style={{ color: '#4A5568', fontSize: 13, marginBottom: 20 }}>
+        Emitis facturas electronicas a nombre de tu CUIT. El CAE se obtiene en tiempo real de ARCA.
+      </p>
+
+      <div className="alert-box alert-info" style={{ marginBottom: 16 }}>
+        <div><strong>Emisor:</strong> {user.nombre} {user.apellido} · CUIT: {user.fiscal?.cuit} · Categoria {user.fiscal?.cat}</div>
+      </div>
 
       <div className="g2" style={{ marginBottom: 16 }}>
         <div className="card">
@@ -1110,26 +1122,30 @@ function EmitirFactura() {
             {error && <div className="alert-box alert-danger" style={{ marginBottom: 12 }}>{error}</div>}
             {resultado && (
               <div className="alert-box alert-success" style={{ marginBottom: 12, padding: '14px 16px' }}>
-                <div style={{ fontWeight: 700, marginBottom: 6 }}>✅ Factura emitida correctamente</div>
-                <div style={{ fontSize: 12.5 }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Factura emitida correctamente</div>
+                <div style={{ fontSize: 12.5, lineHeight: 1.8 }}>
                   <div>Nro: <strong>{resultado.nroComprobante}</strong></div>
                   <div>CAE: <strong>{resultado.CAE}</strong></div>
                   <div>Vencimiento CAE: <strong>{resultado.CAEFchVto}</strong></div>
                 </div>
               </div>
             )}
-            <div className="form-group">
-              <label className="form-label">Cliente *</label>
-              <select className="form-input" style={{ appearance: 'none' }} value={form.uid} onChange={e => F('uid', e.target.value)}>
-                <option value="">Seleccionar cliente...</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.nombre} {c.apellido} — CUIT: {c.fiscal?.cuit}</option>)}
-              </select>
-            </div>
-            {clienteSel && (
-              <div className="alert-box alert-info" style={{ marginBottom: 12, fontSize: 12 }}>
-                <strong>Receptor:</strong> {clienteSel.nombre} {clienteSel.apellido} · CUIT: {clienteSel.fiscal?.cuit} · Cat. {clienteSel.fiscal?.cat}
+
+            <div style={{ fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', color: '#4A5568', marginBottom: 10 }}>Datos del receptor</div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">CUIT del receptor *</label>
+                <input className="form-input" value={form.cuitReceptor} onChange={e => F('cuitReceptor', e.target.value)} placeholder="20-12345678-9" />
               </div>
-            )}
+              <div className="form-group">
+                <label className="form-label">Nombre / Razon social</label>
+                <input className="form-input" value={form.nombreReceptor} onChange={e => F('nombreReceptor', e.target.value)} placeholder="Juan Perez" />
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: '#DDE1EC', margin: '4px 0 14px' }} />
+            <div style={{ fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', color: '#4A5568', marginBottom: 10 }}>Datos de la factura</div>
+
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Concepto *</label>
@@ -1144,11 +1160,11 @@ function EmitirFactura() {
             </div>
             <div className="form-group">
               <label className="form-label">Descripcion</label>
-              <input className="form-input" value={form.descripcion} onChange={e => F('descripcion', e.target.value)} placeholder="Honorarios profesionales..." />
+              <input className="form-input" value={form.descripcion} onChange={e => F('descripcion', e.target.value)} placeholder="Servicios profesionales..." />
             </div>
-            {form.importe && <div style={{ padding: '10px 0', fontSize: 13, color: '#4A5568' }}>Importe a facturar: <strong style={{ color: '#0D1117', fontSize: 16 }}>{fmt(parseFloat(form.importe) || 0)}</strong></div>}
-            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '11px' }} onClick={emitir} disabled={emitiendo || loading}>
-              {emitiendo ? 'Emitiendo factura...' : 'Emitir Factura C'}
+            {form.importe && <div style={{ padding: '8px 0', fontSize: 13, color: '#4A5568' }}>Importe: <strong style={{ color: '#0D1117', fontSize: 16 }}>{fmt(parseFloat(form.importe) || 0)}</strong></div>}
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '11px', marginTop: 4 }} onClick={emitir} disabled={emitiendo}>
+              {emitiendo ? 'Conectando con ARCA...' : 'Emitir Factura C'}
             </button>
           </div>
         </div>
@@ -1156,33 +1172,33 @@ function EmitirFactura() {
         <div className="card">
           <div className="card-hd"><span className="card-title">Informacion</span></div>
           <div className="card-bd" style={{ paddingTop: 12 }}>
-            <div style={{ fontSize: 12.5, color: '#4A5568', lineHeight: 1.8 }}>
-              <div style={{ marginBottom: 10 }}><strong style={{ color: '#0D1117' }}>Tipo:</strong> Factura C (monotributistas)</div>
-              <div style={{ marginBottom: 10 }}><strong style={{ color: '#0D1117' }}>Punto de venta:</strong> 00002</div>
-              <div style={{ marginBottom: 10 }}><strong style={{ color: '#0D1117' }}>CUIT emisor:</strong> 20-36416373-9</div>
-              <div style={{ marginBottom: 10 }}><strong style={{ color: '#0D1117' }}>Proceso:</strong> El sistema se conecta a ARCA, obtiene el CAE y registra la factura automáticamente.</div>
+            <div style={{ fontSize: 12.5, color: '#4A5568', lineHeight: 1.9 }}>
+              <div><strong style={{ color: '#0D1117' }}>Tipo:</strong> Factura C</div>
+              <div><strong style={{ color: '#0D1117' }}>Punto de venta:</strong> 00002</div>
+              <div><strong style={{ color: '#0D1117' }}>CUIT emisor:</strong> {user.fiscal?.cuit}</div>
+              <div><strong style={{ color: '#0D1117' }}>Proceso:</strong> El sistema se autentica en ARCA con tu certificado, consulta el ultimo numero de comprobante y solicita el CAE automaticamente.</div>
             </div>
-            <div className="alert-box alert-warn" style={{ marginTop: 12, fontSize: 12 }}>
-              Las facturas emitidas desde aquí son <strong>reales y legalmente válidas</strong>. No se pueden anular desde el sistema — si necesitás anular una, hacelo desde ARCA directamente.
+            <div className="alert-box alert-warn" style={{ marginTop: 14, fontSize: 12 }}>
+              Las facturas emitidas son <strong>reales y legalmente validas</strong>. Si necesitas anular una, hacelo directamente en ARCA.
             </div>
           </div>
         </div>
       </div>
 
       <div className="card">
-        <div className="card-hd"><span className="card-title">Ultimas facturas emitidas</span></div>
+        <div className="card-hd"><span className="card-title">Facturas emitidas este mes</span></div>
         <div className="tbl-wrap">
           <table>
-            <thead><tr><th>Cliente</th><th>Periodo</th><th>Importe</th><th>CAE</th></tr></thead>
+            <thead><tr><th>Periodo</th><th>Receptor</th><th>Importe</th><th>CAE</th></tr></thead>
             <tbody>
               {facturas.length === 0
                 ? <tr><td colSpan={4}><div className="empty"><div className="empty-title">Sin facturas emitidas</div></div></td></tr>
-                : facturas.slice(0, 10).map((f, i) => (
-                  <tr key={i}>
-                    <td className="fw6">{clients.find(c => c.id === f.userId)?.nombre} {clients.find(c => c.id === f.userId)?.apellido}</td>
+                : facturas.map(f => (
+                  <tr key={f.id}>
                     <td>{f.per}</td>
+                    <td style={{ fontSize: 12, color: '#4A5568' }}>{f.receptor || '-'}</td>
                     <td className="fw6">{fmt(f.monto)}</td>
-                    <td style={{ fontSize: 11, color: '#4A5568' }}>{f.cae || '-'}</td>
+                    <td style={{ fontSize: 11, color: '#4A5568', fontFamily: 'monospace' }}>{f.cae || '-'}</td>
                   </tr>
                 ))
               }
@@ -1195,7 +1211,7 @@ function EmitirFactura() {
 }
 
 // ── TITLES & APP ──────────────────────────────────────────────
-const TITLES = { adash: 'Dashboard', aclients: 'Clientes', abillin: 'Facturacion', aiibb: 'IIBB / DJ', afacturar: 'Emitir Factura', apay: 'Gestion de Pagos', acal: 'Calendario Fiscal', amsgs: 'Mensajes', cdash: 'Mi Panel', cbill: 'Mi Facturacion', cimport: 'Importar Facturas desde ARCA', ciibb: 'IIBB / DJ', cpay: 'Mis Pagos', calerts: 'Alertas', cmsgs: 'Mensajes', cal: 'Calendario Fiscal' }
+const TITLES = { adash: 'Dashboard', aclients: 'Clientes', abillin: 'Facturacion', aiibb: 'IIBB / DJ', apay: 'Gestion de Pagos', acal: 'Calendario Fiscal', amsgs: 'Mensajes', cdash: 'Mi Panel', cbill: 'Mi Facturacion', cfacturar: 'Emitir Factura', cimport: 'Importar Facturas desde ARCA', ciibb: 'IIBB / DJ', cpay: 'Mis Pagos', calerts: 'Alertas', cmsgs: 'Mensajes', cal: 'Calendario Fiscal' }
 
 export default function App() {
   const [user, setUser] = useState(null)
@@ -1228,13 +1244,13 @@ export default function App() {
       if (page === 'aclients') return <AdminClients />
       if (page === 'abillin') return <AdminBilling />
       if (page === 'aiibb') return <AdminIIBB />
-      if (page === 'afacturar') return <EmitirFactura />
       if (page === 'apay') return <AdminPay />
       if (page === 'acal') return <AdminCalendario />
       if (page === 'amsgs') return <AdminMsgs user={user} />
     } else {
       if (page === 'cdash') return <ClientDash user={user} />
       if (page === 'cbill') return <ClientBill user={user} />
+      if (page === 'cfacturar') return <EmitirFactura user={user} />
       if (page === 'cimport') return <ImportarFacturas user={user} />
       if (page === 'ciibb') return <ClientIIBB user={user} />
       if (page === 'cpay') return <ClientPay user={user} />
