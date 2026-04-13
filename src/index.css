@@ -130,3 +130,32 @@ tbody tr:last-child { border-bottom: none; }
 .cal-cell-today { background: #1B4FD8; border-color: #1B4FD8; }
 .cal-day { font-size: 11.5px; text-align: center; margin-bottom: 2px; }
 .cal-ev { font-size: 8.5px; font-weight: 700; text-align: center; line-height: 1.3; }
+
+/* ── RESPONSIVE MOBILE ─────────────────────────────────────── */
+.hamburger { display: none; background: none; border: none; cursor: pointer; padding: 6px; color: #0D1117; }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); transition: transform .25s ease; z-index: 200; }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay.open { display: block; }
+  .main { margin-left: 0; }
+  .hamburger { display: flex; align-items: center; justify-content: center; }
+  .topbar { padding: 0 16px; }
+  .page { padding: 16px; }
+  .mq4 { grid-template-columns: repeat(2, 1fr); }
+  .mq3 { grid-template-columns: repeat(2, 1fr); }
+  .g2 { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .modal { margin: 16px; max-height: 85vh; }
+  .tbl-wrap { font-size: 12px; }
+  thead th { font-size: 9px; padding: 7px 8px; }
+  tbody td { padding: 8px; }
+}
+
+@media (max-width: 480px) {
+  .mq4 { grid-template-columns: 1fr 1fr; }
+  .mq3 { grid-template-columns: 1fr 1fr; }
+  .m-val { font-size: 20px !important; }
+  .page-heading { font-size: 15px; }
+}

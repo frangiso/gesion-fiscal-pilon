@@ -68,30 +68,34 @@ const CLIENT_NAV = [
 ]
 
 // ── SIDEBAR ───────────────────────────────────────────────────
-function Sidebar({ user, page, setPage, onLogout }) {
+function Sidebar({ user, page, setPage, onLogout, open, onClose }) {
   const nav = user.role === 'admin' ? ADMIN_NAV : CLIENT_NAV
+  const handleNav = (id) => { setPage(id); onClose() }
   return (
-    <aside className="sidebar">
-      <div className="sb-logo">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="sb-mark">F</div>
-          <div><div className="sb-name">Gestion Fiscal</div><div className="sb-sub">Cdr. Franco Armand Pilon</div></div>
+    <>
+      <div className={`sidebar-overlay${open ? ' open' : ''}`} onClick={onClose} />
+      <aside className={`sidebar${open ? ' open' : ''}`}>
+        <div className="sb-logo">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="sb-mark">F</div>
+            <div><div className="sb-name">Gestion Fiscal</div><div className="sb-sub">Cdr. Franco Armand Pilon</div></div>
+          </div>
         </div>
-      </div>
-      {nav.map(g => (
-        <div key={g.sec}>
-          <div className="sb-sec">{g.sec}</div>
-          {g.items.map(item => <div key={item.id} className={`nav-item${page === item.id ? ' active' : ''}`} onClick={() => setPage(item.id)}>{item.lbl}</div>)}
+        {nav.map(g => (
+          <div key={g.sec}>
+            <div className="sb-sec">{g.sec}</div>
+            {g.items.map(item => <div key={item.id} className={`nav-item${page === item.id ? ' active' : ''}`} onClick={() => handleNav(item.id)}>{item.lbl}</div>)}
+          </div>
+        ))}
+        <div className="sb-foot">
+          <div className="user-pill">
+            <div className="user-av" style={{ background: user.role === 'admin' ? '#B8860B' : '#1B4FD8' }}>{user.nombre?.[0]}{user.apellido?.[0]}</div>
+            <div style={{ flex: 1, minWidth: 0 }}><div className="user-nm">{user.nombre} {user.apellido}</div><div className="user-rl">{user.role === 'admin' ? 'Administrador' : 'Cliente'}</div></div>
+            <button className="btn btn-ghost btn-icon" style={{ padding: 5 }} onClick={onLogout}>X</button>
+          </div>
         </div>
-      ))}
-      <div className="sb-foot">
-        <div className="user-pill">
-          <div className="user-av" style={{ background: user.role === 'admin' ? '#B8860B' : '#1B4FD8' }}>{user.nombre?.[0]}{user.apellido?.[0]}</div>
-          <div style={{ flex: 1, minWidth: 0 }}><div className="user-nm">{user.nombre} {user.apellido}</div><div className="user-rl">{user.role === 'admin' ? 'Administrador' : 'Cliente'}</div></div>
-          <button className="btn btn-ghost btn-icon" style={{ padding: 5 }} onClick={onLogout}>X</button>
-        </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   )
 }
 
@@ -1290,6 +1294,8 @@ export default function App() {
     return () => unsub()
   }, [])
 
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   const handleLogout = async () => { await logoutUser(); setUser(null); setPage(null) }
 
   if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0D1117' }}><div style={{ color: '#fff', fontSize: 16 }}>Cargando sistema...</div></div>
@@ -1320,10 +1326,15 @@ export default function App() {
 
   return (
     <div className="shell">
-      <Sidebar user={user} page={page} setPage={setPage} onLogout={handleLogout} />
+      <Sidebar user={user} page={page} setPage={setPage} onLogout={handleLogout} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="main">
         <header className="topbar">
-          <h1 className="page-heading">{TITLES[page] || 'Gestion Fiscal'}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="hamburger" onClick={() => setSidebarOpen(o => !o)}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <h1 className="page-heading">{TITLES[page] || 'Gestion Fiscal'}</h1>
+          </div>
           <span className="tb-badge">{user.role === 'admin' ? 'Administrador' : `Categoria ${user.fiscal?.cat || ''}`}</span>
         </header>
         {renderPage()}
