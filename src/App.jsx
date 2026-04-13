@@ -199,7 +199,7 @@ function AdminClients() {
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
   const [sel, setSel] = useState(null)
-  const EF = { nombre: '', apellido: '', email: '', password: '', tel: '', cuit: '', cat: 'A', act: '', inicio: '', dom: '', iibb: false, nroiibb: '' }
+  const EF = { nombre: '', apellido: '', email: '', password: '', tel: '', cuit: '', cat: 'A', act: '', inicio: '', dom: '', iibb: false, nroiibb: '', vencMT: '20', vencIIBB: '15' }
   const [form, setForm] = useState(EF)
   const [msg, setMsg] = useState('')
   const [saving, setSaving] = useState(false)
@@ -214,9 +214,9 @@ function AdminClients() {
     try {
       if (modal === 'create') {
         const uid = await createAuthUser(form.email, form.password)
-        await createClient(uid, { nombre: form.nombre, apellido: form.apellido, email: form.email, tel: form.tel, fiscal: { cuit: form.cuit, cat: form.cat, act: form.act, inicio: form.inicio, dom: form.dom, iibb: form.iibb, nroiibb: form.nroiibb } })
+        await createClient(uid, { nombre: form.nombre, apellido: form.apellido, email: form.email, tel: form.tel, fiscal: { cuit: form.cuit, cat: form.cat, act: form.act, inicio: form.inicio, dom: form.dom, iibb: form.iibb, nroiibb: form.nroiibb, vencMT: form.vencMT || '20', vencIIBB: form.vencIIBB || '15' } })
       } else {
-        await updateClient(sel.id, { nombre: form.nombre, apellido: form.apellido, tel: form.tel, fiscal: { cuit: form.cuit, cat: form.cat, act: form.act, inicio: form.inicio, dom: form.dom, iibb: form.iibb, nroiibb: form.nroiibb } })
+        await updateClient(sel.id, { nombre: form.nombre, apellido: form.apellido, tel: form.tel, fiscal: { cuit: form.cuit, cat: form.cat, act: form.act, inicio: form.inicio, dom: form.dom, iibb: form.iibb, nroiibb: form.nroiibb, vencMT: form.vencMT || '20', vencIIBB: form.vencIIBB || '15' } })
       }
       await load(); setModal(null)
     } catch (e) { setMsg('Error: ' + (e.message || 'Intenta de nuevo')) }
@@ -272,6 +272,20 @@ function AdminClients() {
           <div className="form-row">
             <div className="form-group"><label style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', fontSize: 13 }}><input type="checkbox" checked={form.iibb || false} onChange={e => F('iibb', e.target.checked)} style={{ width: 14, height: 14 }} />Inscripto en IIBB</label></div>
             {form.iibb && <div className="form-group"><label className="form-label">N. IIBB</label><input className="form-input" value={form.nroiibb || ''} onChange={e => F('nroiibb', e.target.value)} /></div>}
+          </div>
+          <div style={{ height: 1, background: '#DDE1EC', margin: '12px 0' }} />
+          <div style={{ fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', color: '#4A5568', marginBottom: 10 }}>Fechas de vencimiento personalizadas</div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Dia de vencimiento Monotributo</label>
+              <input className="form-input" type="number" min="1" max="31" value={form.vencMT || '20'} onChange={e => F('vencMT', e.target.value)} placeholder="20" />
+              <div style={{ fontSize: 11, color: '#4A5568', marginTop: 3 }}>Por defecto: dia 20</div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Dia de vencimiento IIBB</label>
+              <input className="form-input" type="number" min="1" max="31" value={form.vencIIBB || '15'} onChange={e => F('vencIIBB', e.target.value)} placeholder="15" />
+              <div style={{ fontSize: 11, color: '#4A5568', marginTop: 3 }}>Por defecto: dia 15</div>
+            </div>
           </div>
         </div>
         <div className="modal-ft"><button className="btn btn-outline" onClick={() => setModal(null)}>Cancelar</button><button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Guardando...' : modal === 'create' ? 'Crear cliente' : 'Guardar'}</button></div>
@@ -675,18 +689,35 @@ function AdminCalendario() {
 }
 
 // ── CALENDARIO CLIENTE ────────────────────────────────────────
-function Calendario() {
+function Calendario({ user }) {
   const today = new Date()
   const [mes, setMes] = useState(today.getMonth() + 1)
   const [anio, setAnio] = useState(today.getFullYear())
   const [events, setEvents] = useState([])
   useEffect(() => { getCalEvents().then(setEvents) }, [])
-  const mesEvents = events.filter(e => e.recurrente || parseInt(e.mes) === mes - 1)
+
+  // Vencimientos personalizados del cliente
+  const vencMT   = parseInt(user?.fiscal?.vencMT   || '20')
+  const vencIIBB = parseInt(user?.fiscal?.vencIIBB || '15')
+
+  // Combinar eventos globales con los vencimientos del cliente
+  const mesEvents = [
+    // Eventos globales (que no sean MT o IIBB, para no duplicar)
+    ...events.filter(e => e.tipo !== 'mt' && e.tipo !== 'ib' && (e.recurrente || parseInt(e.mes) === mes - 1)),
+    // Vencimiento MT del cliente
+    { id: 'cmt', dia: vencMT, lbl: 'Vencimiento Monotributo', col: '#1B4FD8', desc: `Tu vencimiento es el dia ${vencMT}`, tipo: 'mt' },
+    // Vencimiento IIBB del cliente (solo si inscripto)
+    ...(user?.fiscal?.iibb ? [{ id: 'cib', dia: vencIIBB, lbl: 'Vencimiento IIBB', col: '#0A6E3E', desc: `Tu vencimiento es el dia ${vencIIBB}`, tipo: 'ib' }] : []),
+    // Recategorización en enero y julio
+    ...((mes === 1 || mes === 7) ? [{ id: 'rc', dia: 20, lbl: 'Recategorizacion', col: '#C45A0A', desc: 'Periodo de recategorizacion del 1 al 20' }] : []),
+  ]
+
   const diasMes = new Date(anio, mes, 0).getDate()
   const primerDia = new Date(anio, mes - 1, 1).getDay()
   const offset = primerDia === 0 ? 6 : primerDia - 1
   const cellEvs = {}; mesEvents.forEach(e => { if (!cellEvs[e.dia]) cellEvs[e.dia] = []; cellEvs[e.dia].push(e) })
   const cells = []; for (let i = 0; i < offset; i++) cells.push(null); for (let d = 1; d <= diasMes; d++) cells.push(d)
+
   return (
     <div className="page">
       <div className="sec-hd">
@@ -698,8 +729,34 @@ function Calendario() {
         </div>
       </div>
       <div className="g2" style={{ marginBottom: 16 }}>
-        <div className="card"><div className="card-hd"><span className="card-title">Vencimientos de {MF[mes - 1]}</span></div><div className="card-bd" style={{ paddingTop: 10 }}>{mesEvents.length === 0 ? <div style={{ color: '#4A5568', fontSize: 13 }}>Sin eventos</div> : mesEvents.map(ev => <div key={ev.id} className="alert-box alert-info" style={{ marginBottom: 8, borderLeft: `3px solid ${ev.col}`, background: ev.col + '15' }}><div style={{ color: ev.col }}><strong>Dia {ev.dia} - {ev.lbl}</strong>{ev.desc && <><br /><span style={{ fontSize: 11.5 }}>{ev.desc}</span></>}</div></div>)}</div></div>
-        <div className="card"><div className="card-hd"><span className="card-title">Referencias</span></div><div className="card-bd" style={{ paddingTop: 10 }}>{[...new Map(events.map(e => [e.col, e])).values()].map((e, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 9, fontSize: 13 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: e.col, flexShrink: 0 }} />{e.lbl}</div>)}</div></div>
+        <div className="card">
+          <div className="card-hd"><span className="card-title">Tus vencimientos de {MF[mes - 1]}</span></div>
+          <div className="card-bd" style={{ paddingTop: 10 }}>
+            {mesEvents.length === 0
+              ? <div style={{ color: '#4A5568', fontSize: 13 }}>Sin eventos este mes</div>
+              : mesEvents.map(ev => (
+                <div key={ev.id} className="alert-box alert-info" style={{ marginBottom: 8, borderLeft: `3px solid ${ev.col}`, background: ev.col + '15' }}>
+                  <div style={{ color: ev.col }}><strong>Dia {ev.dia} - {ev.lbl}</strong>{ev.desc && <><br /><span style={{ fontSize: 11.5 }}>{ev.desc}</span></>}</div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-hd"><span className="card-title">Tus fechas clave</span></div>
+          <div className="card-bd" style={{ paddingTop: 10 }}>
+            {[
+              { col: '#1B4FD8', txt: `Monotributo — vence el dia ${vencMT} de cada mes` },
+              ...(user?.fiscal?.iibb ? [{ col: '#0A6E3E', txt: `IIBB — vence el dia ${vencIIBB} de cada mes` }] : []),
+              { col: '#C45A0A', txt: 'Recategorizacion — enero y julio (del 1 al 20)' },
+            ].map((r, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10, fontSize: 13 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 3, background: r.col, flexShrink: 0 }} />
+                {r.txt}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
       <div className="card"><div className="card-bd">
         <div className="cal-grid" style={{ marginBottom: 7 }}>{['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map(d => <div key={d} style={{ textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: '#4A5568', paddingBottom: 5 }}>{d}</div>)}</div>
@@ -1256,7 +1313,7 @@ export default function App() {
       if (page === 'cpay') return <ClientPay user={user} />
       if (page === 'calerts') return <ClientAlerts user={user} />
       if (page === 'cmsgs') return <ClientMsgs user={user} />
-      if (page === 'cal') return <Calendario />
+      if (page === 'cal') return <Calendario user={user} />
     }
     return <div className="page">Pagina no encontrada</div>
   }
