@@ -149,6 +149,37 @@ function AdminDash({ setPage }) {
   const recat = clients.filter(c => { const t = allInv.filter(i => i.userId === c.id).reduce((s, i) => s + i.monto, 0); return t > 0 && getCat(t) !== c.fiscal?.cat })
   const chartData = MN.map((mes, i) => { const p = `${ANIO}-${String(i + 1).padStart(2, '0')}`; return { mes, monto: allInv.filter(f => f.per === p).reduce((s, f) => s + f.monto, 0) } })
   const recent = allPay.filter(p => p.estado !== 'pagado').slice(0, 6).map(p => ({ ...p, cnom: clients.find(c => c.id === p.userId)?.nombre + ' ' + clients.find(c => c.id === p.userId)?.apellido || '-' }))
+
+  // Clientes con vencimiento proximo (proximos 5 dias)
+  const hoy = new Date()
+  const diaHoy = hoy.getDate()
+  const clientesConVenc = clients
+    .filter(c => c.tel) // solo los que tienen telefono
+    .map(c => {
+      const vencMT = parseInt(c.fiscal?.vencMT || '20')
+      const vencIIBB = parseInt(c.fiscal?.vencIIBB || '15')
+      const diasParaMT = vencMT >= diaHoy ? vencMT - diaHoy : null
+      const diasParaIIBB = c.fiscal?.iibb && vencIIBB >= diaHoy ? vencIIBB - diaHoy : null
+      const proximoVenc = [diasParaMT, diasParaIIBB].filter(d => d !== null && d <= 5 && d >= 0)
+      if (proximoVenc.length === 0) return null
+      return {
+        ...c,
+        diasParaMT: diasParaMT !== null && diasParaMT <= 5 && diasParaMT >= 0 ? diasParaMT : null,
+        diasParaIIBB: diasParaIIBB !== null && diasParaIIBB <= 5 && diasParaIIBB >= 0 ? diasParaIIBB : null,
+        vencMT, vencIIBB
+      }
+    })
+    .filter(Boolean)
+
+  const abrirWA = (c, tipo) => {
+    const tel = c.tel.replace(/\D/g, '')
+    const dia = tipo === 'MT' ? c.vencMT : c.vencIIBB
+    const concepto = tipo === 'MT' ? 'Monotributo' : 'Ingresos Brutos'
+    const msg = `Hola ${c.nombre}! Te recuerdo que el ${concepto} vence el dia ${dia} de este mes. Cualquier consulta estoy a disposicion. Saludos, Franco Armand Pilon - Contador Publico.`
+    const url = `https://wa.me/549${tel}?text=${encodeURIComponent(msg)}`
+    window.open(url, '_blank')
+  }
+
   if (loading) return <div className="page"><div className="empty">Cargando...</div></div>
   return (
     <div className="page">
@@ -158,6 +189,48 @@ function AdminDash({ setPage }) {
         <div className="metric"><div className="m-lbl">Pagos pendientes</div><div className="m-val" style={{ color: '#C45A0A' }}>{pend}</div><div className="m-sub">sin abonar</div></div>
         <div className="metric"><div className="m-lbl">Pagos vencidos</div><div className="m-val" style={{ color: '#C0291A' }}>{venc}</div><div className="m-sub">{recat.length} requieren recategorizacion</div></div>
       </div>
+
+      {/* Recordatorios WhatsApp */}
+      {clientesConVenc.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-hd">
+            <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 16 }}>💬</span> Recordatorios WhatsApp — proximos 5 dias
+            </span>
+          </div>
+          <div className="card-bd" style={{ paddingTop: 10 }}>
+            {clientesConVenc.map(c => (
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #ECEEF4', flexWrap: 'wrap', gap: 8 }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{c.nombre} {c.apellido}</div>
+                  <div style={{ fontSize: 11.5, color: '#4A5568' }}>
+                    {c.diasParaMT !== null && <span style={{ marginRight: 10 }}>Monotributo: dia {c.vencMT} {c.diasParaMT === 0 ? '(HOY)' : `(en ${c.diasParaMT} dias)`}</span>}
+                    {c.diasParaIIBB !== null && <span>IIBB: dia {c.vencIIBB} {c.diasParaIIBB === 0 ? '(HOY)' : `(en ${c.diasParaIIBB} dias)`}</span>}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {c.diasParaMT !== null && (
+                    <button className="btn btn-success btn-sm" onClick={() => abrirWA(c, 'MT')} style={{ background: '#25D366', color: '#fff', border: 'none' }}>
+                      WA Monotributo
+                    </button>
+                  )}
+                  {c.diasParaIIBB !== null && (
+                    <button className="btn btn-success btn-sm" onClick={() => abrirWA(c, 'IIBB')} style={{ background: '#25D366', color: '#fff', border: 'none' }}>
+                      WA IIBB
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {clientesConVenc.filter(c => !c.tel).length > 0 && (
+              <div style={{ fontSize: 11.5, color: '#4A5568', marginTop: 8 }}>
+                Algunos clientes no tienen telefono cargado y no aparecen aqui.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="g2" style={{ marginBottom: 16 }}>
         <div className="card">
           <div className="card-hd"><span className="card-title">Facturacion mensual {ANIO}</span></div>
